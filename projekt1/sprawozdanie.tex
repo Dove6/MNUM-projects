@@ -1,0 +1,389 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, margin=2.00cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{minted}
+\usepackage{parskip}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage[justification=centering]{caption}
+
+\graphicspath{ {images/} }
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\thesection}{\arabic{section}.}
+\renewcommand{\thesubsection}{\thesection\arabic{subsection}.}
+\setminted{breaklines}
+\hyphenpenalty=10000
+\emergencystretch=\maxdimen
+\captionsetup[table]{name=Tabela}
+\captionsetup[figure]{name=Wykres}
+
+\title{Sprawozdanie z wykonania zadania 1.14}
+\author{Dawid Sygocki}
+\date{\today}
+
+\begin{document}
+\makeatletter
+{\huge \@title} \\
+\textsl{\large Autor: \@author, nr indeksu: 304108, grupa: wtorek 14:15}
+\makeatother
+
+Niniejszy dokument podsumowuje moją realizację projektu 1 z przedmiotu Metody Numeryczne. Zadanie dotyczyło rozwiązywania układów równań liniowych.
+
+\section{Metoda eliminacji Gaussa z częściowym (kolumnowym) wyborem elementu podstawowego}
+
+\subsection{Opis algorytmu i implementacji}
+Metoda eliminacji Gaussa to jedna z metod skończonych, w których liczba iteracji koniecznych do~wyprowadzenia rozwiązania jest wiadoma z góry i zależna od rozmiaru macierzy.
+
+Pierwszym etapem rozwiązywania układu równań liniowych tą metodą jest tytułowa eliminacja wartości poniżej przekątnej macierzy wejściowej \(A\), co prowadzi do jej rozkładu na macierze trójkątną górną \(U\) oraz dolną \(L\) takie, że \(L\cdot U = A\). Dokonuje się to poprzez odejmowanie kolejnych wierszy ,,od góry'' od wszystkich wierszy leżących poniżej nich. W każdej operacji odejmowania używany jest mnożnik zapewniający wyzerowanie odpowiedniego elementu wiersza. Wspomniane mnożniki tworzą macierz \(L\) (nie jest ona potrzebna w dalszych obliczeniach). \\
+Następnie stosuje się podstępowanie odwrotne: otrzymane w postaci macierzy \(U\) równania rozwiązywane są kolejno ,,od~dołu''. Jest to o tyle proste, że w każdym kroku występuje pojedyncza niewiadoma.
+
+Na etapie eliminacji, w trakcie obliczania elementów macierzy \(L\), może się zdarzyć, że na głównej przekątnej (w roli dzielnika) wystąpi wartość zerowa, co uniemożliwi dzielenie. Rozwiązaniem tego problemu jest wybór elementu podstawowego, czyli przestawienie wierszy i/lub kolumn macierzy w~taki sposób, by zastąpić zero wartością o maksymalnym możliwym module.
+
+Wskazana w zadaniu odmiana metody wykorzystuje częściowy (kolumnowy) wybór elementu podstawowego. Przestrzenią poszukiwań jest nieprzetworzona\footnote{\emph{Nieprzetworzona} nie oznacza tu \emph{niezmieniona}, ponieważ w każdej iteracji modyfikuje się wiersze poniżej bieżącego (włącznie z nim).} jeszcze część bieżącej kolumny, czyli wszystkie wartości ,,poniżej'' tej na przekątnej (z nią włącznie). Po wyznaczeniu elementu o~największej wartości bezwzględnej następuje zamiana wierszy. \\
+Zgodnie ze wskazówką z podręcznika, w celu minimalizacji błędów numerycznych wybór elementu podstawowego zachodzi w każdej iteracji, niezależnie od tego, czy element na głównej przekątnej równy jest 0.
+
+Do jeszcze znaczniejszego zmniejszenia błędów numerycznych prowadzić może pełny wybór elementu podstawowego, gdzie przestrzenią poszukań jest nie tylko pojedyncza kolumna, a cała nieprzetworzona podmacierz (prawy dolny róg macierzy \(A\)). Opcja ta pociąga jednak za sobą znaczne zwiększenie liczby obliczeń, przez co jest w praktyce stosowana rzadziej (dla przykładu wbudowana w~środowisko MATLAB funkcja \texttt{linsolve} wykorzystuje właśnie wybór częściowy).
+
+\subsection{Wyniki oraz wnioski}
+Działanie własnej implementacji sprawdzałem na dwóch wskazanych zestawach danych.
+
+Zestaw pierwszy zdefiniowany jest wzorem:
+\[
+a_{ij} =
+\begin{cases}
+7 & \text{dla \(i = j\)} \\
+3 & \text{dla \(i = j-1\) lub \(i = j+1\)} \\
+0 & \text{dla pozostałych}
+\end{cases}
+\text{,}
+\quad \quad
+b_{i} = 5 + 0,2i
+\]
+
+Jak widać na wykresie \ref{fig:rnorm_gaussian1}, dla danych tych obliczone zostało rozwiązanie bardzo dobrej jakości. Dla macierzy o rozmiarze 1280x1280 błąd w postaci drugiej normy residuum nie przekracza \(10^{-12}\). Wynik ten nie odbiega od wbudowanych funkcji języka MATLAB. \\
+Szczególnie ważna w porównaniu jest funkcja \texttt{linsolve}, która, zgodnie z dokumentacją, również dokonuje rozkładu \(LU\) z częściowym wyborem elementu podstawowego. Z rysunku wynika, że daje ona w większości wypadków nieznacznie lepsze wyniki.
+
+Dla badanego zakresu wymiarów dokładność rozwiązania wydaje się maleć niemal liniowo wraz ze~wzrostem rozmiaru danych.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{rnorm_gaussian1}
+\centering
+\caption{Porównanie błędu residuum dla zestawu danych 1 dla własnej implementacji metody eliminacji Gaussa oraz wbudowanych w MATLAB solwerów}
+\label{fig:rnorm_gaussian1}
+\end{figure}
+\FloatBarrier
+
+Mniej satysfakcjonujący jest wykres \ref{fig:time_gaussian1} przedstawiający porównanie czasu obliczania wyniku. Różnica między moją implementacją a metodami wbudowanymi jest początkowo niezauważalna, ale szybko rośnie i dla rozmiaru 1280x1280 dochodzi już do trzech rzędów wielkości. Wiąże się to z pewnością z szeregiem optymalizacji poczynionych przez autorów oprogramowania MATLAB.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{time_gaussian1}
+\caption{Porównanie czasu obliczania dla zestawu danych 1 dla własnej implementacji metody eliminacji Gaussa oraz wbudowanych w MATLAB solwerów}
+\label{fig:time_gaussian1}
+\end{figure}
+\FloatBarrier
+
+Poza wskazanym odstępstwem czasowym, działanie autorskiej implementacji dla pierwszego zestawu danych nie cechuje się niczym szczególnym.
+
+Sytuacja zmienia się dla zestawu drugiego określonego wzorem:
+\[
+a_{ij} = \frac{5}{6(i+j-1)}
+\text{,}
+\quad \quad
+b_{i} =
+\begin{cases}
+\frac{1}{1,5i} & \text{dla \(i\) nieparzystych} \\
+0 & \text{dla \(i\) parzystych}
+\end{cases}
+\]
+
+Rysunek \ref{fig:rnorm_gaussian2} obrazuje, jak sporym błędem obarczone jest rozwiązanie układu dla przedstawionych danych. Najszybszy wzrost wartości normy residuum występuje między rozmiarami 10x10 a 20x20, potem wydaje się on wolniejszy i bardziej niepewny (co wnioskuję po kształcie łamanych linii wykresu, zarówno dla metod wbudowanych, jak i dla implementacji własnej).
+
+Podobnie jak poprzednio, rozwiązanie autorskie wypada nieznacznie gorzej niż oferowane przez środowisko MATLAB funkcje. \\
+Warta odnotowania jest różnica w zakresach wartości błędu. Dla danych z zestawu 1 było to mniej więcej \(10^{-15}\) -- \(10^{-12}\), dla danych z zestawu 2 natomiast \(10^{-5}\) -- \(10^{2}\).
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{rnorm_gaussian2}
+\caption{Porównanie błędu residuum dla zestawu danych 2 dla własnej implementacji metody eliminacji Gaussa oraz wbudowanych w MATLAB solwerów}
+\label{fig:rnorm_gaussian2}
+\end{figure}
+\FloatBarrier
+
+Dla odmiany na wykresie czasu wykonania zakres wartości jest bardzo bliski poprzedniemu. Jak w przypadku zestawu 1, widać rosnącą przewagę funkcji wbudowanych.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{time_gaussian2}
+\caption{Porównanie czasu obliczania dla zestawu danych 2 dla własnej implementacji metody eliminacji Gaussa oraz wbudowanych w MATLAB solwerów}
+\label{fig:time_gaussian2}
+\end{figure}
+\FloatBarrier
+
+Skąd tak znaczna rozbieżność w dokładności rozwiązania dla różnych danych? Okazuje się, że macierz \(A\) jest źle uwarunkowana. Można to wywnioskować już na podstawie wzoru opisującego generowaną macierz, bardzo podobnego do wzoru na macierz Hilberta:
+\[ a_{ij} = \frac{5}{6(i+j-1)} = \frac{5}{6} \mathbf{H}_{ij} \]
+Również sam MATLAB ostrzega o możliwej niedokładności przy próbie wyliczenia rozwiązania funkcjami \texttt{linsolve} czy \texttt{mldivide}:
+\begin{minted}{text}
+Warning: Matrix is close to singular or badly scaled. Results may be inaccurate. RCOND =  8.429870e-20.
+\end{minted}
+
+Tabela \ref{table:condition} podsumowuje wartość wskaźnika uwarunkowania macierzy \(A\) (wskaźnika uwarunkowania wektora \(x\) względem zaburzeń wektora \(b\)) dla używanych zestawów danych. Wartości te zostały obliczone z użyciem oferowanej przez MATLAB funkcji \texttt{cond}.
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|c|c|} 
+    \hline
+    \textbf{Wymiar} & \textbf{\(cond(A)\) dla danych 1} & \textbf{\(cond(A)\) dla danych 2} \\
+    \hline\hline
+    10   & \(1,026\cdot10^{1}\) & \(1,603\cdot10^{13}\) \\ \hline
+    20   & \(1,212\cdot10^{1}\) & \(1,901\cdot10^{18}\) \\ \hline
+    40   & \(1,276\cdot10^{1}\) & \(2,051\cdot10^{18}\) \\ \hline
+    80   & \(1,294\cdot10^{1}\) & \(4,027\cdot10^{19}\) \\ \hline
+    160  & \(1,298\cdot10^{1}\) & \(4,639\cdot10^{20}\) \\ \hline
+    320  & \(1,300\cdot10^{1}\) & \(5,068\cdot10^{20}\) \\ \hline
+    640  & \(1,300\cdot10^{1}\) & \(2,235\cdot10^{21}\) \\ \hline
+    1280 & \(1,300\cdot10^{1}\) & \(1,115\cdot10^{21}\) \\ \hline
+\end{tabular}
+\caption{Porównanie wskaźnika uwarunkowania macierzy \(A\) dla obu zestawów danych}
+\label{table:condition}
+\end{table}
+\FloatBarrier
+
+\clearpage
+\section{Metoda Jacobiego}
+
+\subsection{Opis algorytmu i implementacji}
+Metoda Jacobiego to metoda iteracyjna -- początkowe przybliżenie rozwiązania jest w niej stopniowo poprawiane na przestrzeni nieznanej liczby iteracji. Taki schemat działania pozwala na przerwanie obliczeń w dowolnej chwili i otrzymanie mniej lub bardziej dokładnego rozwiązania.
+
+Aby zatrzymać algorytm w odpowiednim miejscu, wykonuje się testy stopu. Dwa kryteria wymienione w podręczniku do przedmiotu to:
+\begin{enumerate}
+\item badanie różnicy między kolejnymi rozwiązaniami -- jeśli jest bardzo mała, może to oznaczać zbliżanie się do dokładnego rozwiązania (albo do limitu dokładności numerycznej), 
+\item sprawdzanie normy błędu rozwiązania -- której minimalizacja jest głównym celem.
+\end{enumerate}
+Kryterium 2 jest obliczeniowo bardziej kosztowne, więc, zgodnie z zaleceniem, testuję je w swojej implementacji tylko, jeśli kryterium 1 nie jest spełnione. \\
+Ponadto ze względów praktycznych stosuję dodatkowe dwa ograniczenia:
+\begin{enumerate}[resume]
+\item liczby iteracji,
+\item zakresu wartości -- jeśli w wektorze rozwiązania pojawiają się wartości NaN albo Inf, dalsze obliczenia nie mają sensu.
+\end{enumerate}
+
+Zasada działania metody Jacobiego opiera się o rozłożenie macierzy wejściowej \(A\) na sumę trzech macierzy: poniżej diagonalnej \(L\), diagonalnej \(D\) i powyżej diagonalnej \(U\). Uzyskane macierze są następnie używane do poprawiania rozwiązania wedle wzoru:
+\[ x^{(i+1)} = -D^{-1}(L+U)x^{(i)} + D^{-1}b \]
+
+Jako startową wartość rozwiązania \(x^{(1)}\) przyjmuję wektor zerowy. Zadanie nie wskazuje alternatywy, a jeśli tylko macierz \(A\) spełnia warunek konieczny i dostateczny zbieżności ciągu przybliżeń rozwiązania, każdy wektor jest równie dobry.
+
+\subsection{Wyniki oraz wnioski}
+
+Pierwszy zestaw danych nie sprawił algorytmowi problemów. Wraz ze zwiększaniem wymiaru danych macierz \(A\) coraz lepiej pasuje do specjalizacji metod iteracyjnych -- jest rzadka (dominują w niej zera) i spora. Wynik okazuje się mniej dokładny niż w przypadku metody skończonej, ale różnica nie przekracza jednego rzędu wielkości. Przedstawiony na wykresie \ref{fig:rnorm_jacobi1} rezultat obliczeń pochodzi z uruchomienia ograniczonego jedynie liczbą iteracji (100~tys.).
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{rnorm_jacobi1}
+\centering
+\caption{Porównanie błędu residuum dla zestawu danych 1 dla własnej implementacji metody Jacobiego oraz wbudowanych w MATLAB solwerów}
+\label{fig:rnorm_jacobi1}
+\end{figure}
+\FloatBarrier
+
+Jako że zarówno liczenie tak wielu iteracji, jak i częste badanie błędu rozwiązania są czasochłonne, w teście szybkości postanowiłem przyjąć za próg błędu wartość większą niż granica dokładności, ale wciąż bardzo małą: \(10^{-9}\). Kryterium to zostało spełnione dla wszystkich badanych rozmiarów na przestrzeni nie więcej niż 200 iteracji, a czas obliczania w sekundach przedstawiłem na rysunku \ref{fig:time_jacobi1_e-9}. Okazuje się, że dla wybranej dokładności jest on porównywalny z czasem potrzebnym na wyliczenie znacznie dokładniejszego rozwiązania własną implementacją metody eliminacji Gaussa.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{time_jacobi1_e-9}
+\centering
+\caption{Porównanie błędu residuum dla zestawu danych 1 dla własnej implementacji metody Jacobiego oraz wbudowanych w MATLAB solwerów}
+\label{fig:time_jacobi1_e-9}
+\end{figure}
+\FloatBarrier
+
+Zasilenie metody Jacobiego drugim zestawem danych nie daje żadnych sensownych wyników, stąd brak wykresów dokładności rozwiązania czy czasu jego obliczania. Norma błędu w większości przypadków szybko przyjęła wartość \(\infty\).
+
+Powodu takiego zachowania należy szukać w podstawowym kryterium zbieżności ciągu kolejnych przybliżeń rozwiązania \(x\) definiowanym wzorem:
+\[ sr(M)<1 \text{,} \]
+gdzie \(M\) jest pewną macierzą, przez którą mnożony jest w każdym kroku ogólnego wzoru metod iteracyjnych wektor \(x\):
+\[ x^{(x+1)} = Mx^{(i)} + w \text{,} \]
+a \(sr(M)\) oznacza promień spektralny tej macierzy. \\
+W przypadku metody Jacobiego:
+\[ M = D^{-1}(L + U) \text{.} \]
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|c|c|} 
+    \hline
+    \textbf{Wymiar} & \textbf{\(sr(M)\) dla danych 1} & \textbf{\(sr(M)\) dla danych 2} \\
+    \hline\hline
+    10   & 0,822 & 7,780 \\ \hline
+    20   & 0,848 & 16,492 \\ \hline
+    40   & 0,855 & 33,946 \\ \hline
+    80   & 0,856 & 68,872 \\ \hline
+    160  & 0,857 & 138,735 \\ \hline
+    320  & 0,857 & 278,464 \\ \hline
+    640  & ?     & 557,925 \\ \hline
+    1280 & ?     & 1116,849 \\ \hline
+\end{tabular}
+\caption{Porównanie promienia spektralnego macierzy \(M\) dla danych 1 i 2}
+\label{table:sr}
+\end{table}
+\FloatBarrier
+
+Jak wynika z tabeli \ref{table:sr}, w przypadku drugiego zestawu danych żadna macierz nie spełnia określonego warunku. Dla pierwszego zestawu danych kryterium jest w większości wypadków spełnione, niemożliwe okazało się jednak obliczenie największej wartości własnej dla sporych macierzy (640x640, 1280x1280).
+
+W tym momencie warto jeszcze rozważyć definiowany przez metodę warunek wystarczający zbieżności: silną dominację wierszową lub kolumnową macierzy \(A\). Z definicji danych wynika, że warunek ten jest spełniony, stąd metoda Jacobiego zwraca poprawny wynik. Prosty dowód dominacji wierszowej dla wspomnianej macierzy zamieszczam poniżej:
+\[
+\forall_{i\in\{1, 2, ..., n\}} \quad
+|a_{ii}| = 7
+\quad \land \quad
+\sum_{j=1\neq i}^{n} |a_{ij}| =
+\begin{cases}
+6\text{,} & i\in\{1, n\} \\
+3\text{,} & \text{w p.p.}
+\end{cases}
+\]
+\[
+\forall_{i,j\in\{1, 2, ..., n\}} \quad
+|a_{ii}| > \sum_{j=1,j\neq i}^{n} |a_{ij}|
+\]
+
+\clearpage
+\section{Kod własnej implementacji}
+
+\subsection{gaussiansolve.m}
+Funkcja realizująca eliminację Gaussa z kolumnowym wyborem elementu podstawowego.
+\begin{minted}{matlab}
+function x = gaussiansolve(A, b)
+    validateinput(A, b);
+    n = size(A, 1);
+
+    % elimination
+    for k = 1:(n - 1)
+        % choosing pivot every iteration to minimize numeric errors
+        [~, pivot_row] = max(abs(A(k:n, k)));
+        pivot_row = pivot_row + k - 1;
+        A([k, pivot_row], :) = A([pivot_row, k], :);
+        b([k, pivot_row], :) = b([pivot_row, k], :);
+        for i = (k + 1):n
+            % storing L matrix in zeroed part of U matrix
+            A(i, k) = A(i, k) / A(k, k);
+            A(i, (k + 1):n) = A(i, (k + 1):n) - A(i, k) .* A(k, (k + 1):n);
+            b(i) = b(i) - A(i, k) .* b(k);
+        end
+    end
+
+    % back-substitution
+    x = zeros(n, 1);
+    x(n) = b(n) / A(n, n);
+    for k = flip(1:(n - 1))
+        x(k) = (b(k) - sum(A(k, (k+1):n) .* x((k+1):n)')) ./ A(k, k);
+    end
+end
+\end{minted}
+
+\subsection{jacobisolve.m}
+Funkcja realizująca metodę Jacobiego wraz z funkcjami pomocniczymi do sprawdzania kryteriów stopu oraz zbieżności.
+\begin{minted}{matlab}
+function [x, total_iterations] = jacobisolve(A, b, tolerance, max_iterations)
+    validateinput(A, b);
+    n = size(A, 1);
+    D = diag(diag(A));
+    LU = A - D;
+    inv_D = inv(D);
+    stop_test_threshold_diff = 1e-3;
+    checkconvergence(D, LU);
+
+    x = zeros(n, 1);
+    for k = 1:max_iterations
+        total_iterations = k;
+        prev_x = x;
+        x = (-inv_D * LU * x) + (inv_D * b);
+        if any(isnan(x)) || any(isinf(x))
+            x = prev_x;
+            break;
+        end
+        [should_stop, stop_test_threshold_diff] = check_stop_criteria(prev_x, x, A, b, stop_test_threshold_diff, tolerance);
+        if should_stop
+            break;
+        end
+    end
+end
+
+function [should_stop, new_threshold_diff] = check_stop_criteria(prev_x, x, A, b, threshold_diff, tolerance)
+    should_stop = false;
+    new_threshold_diff = threshold_diff;
+    if norm(x - prev_x) < threshold_diff
+        if norm(residuum(A, b, x)) < tolerance
+            should_stop = true;
+        elseif threshold_diff > 1e-13
+            new_threshold_diff = threshold_diff / 2;
+        end
+    end
+end
+
+function [] = checkconvergence(D, LU)
+    % sufficient condition
+    row_domination = all(sum(abs(D), 2) > sum(abs(LU), 2));
+    column_domination = all(sum(abs(D), 1) > sum(abs(LU), 1));
+    if not (row_domination || column_domination)
+        % necessary and sufficient condition
+        spectral_radius = abs(eigs(inv(D) * LU, 1));
+        if spectral_radius >= 1
+            warning(strcat( ...
+                'Necessary condition for convergence is not satisfied, sr(M)=', ...
+                num2str(spectral_radius)));
+        else
+            % this branch should not ever execute, but was left just in case
+            warning('Sufficient condition for convergence is not satisfied');
+        end
+    end
+end
+\end{minted}
+
+\subsection{getdata1.m}
+Funkcja generująca pierwszy zestaw danych.
+\begin{minted}{matlab}
+function [matrix, vector] = getdata1(size)
+    matrix = 7 .* eye(size) ...
+        + 3 .* [zeros(1, size); eye(size - 1), zeros(size - 1, 1)] ...
+        + 3 .* [zeros(size - 1, 1), eye(size - 1); zeros(1, size)];
+
+    vector = 5 * ones(size, 1) ...
+        + 0.2 .* ones(size, 1) .* (1:size)';
+end
+\end{minted}
+
+\subsection{getdata2.m}
+Funkcja generująca drugi zestaw danych.
+\begin{minted}{matlab}
+function [matrix, vector] = getdata2(size)
+    matrix = 5 ./ (6 .* ((1:size) + (1:size)' - 1));
+
+    vector = zeros(size, 1);
+    vector(1:2:size) = 1 ./ (1.5 .* (1:2:size));
+end
+\end{minted}
+
+\subsection{residuum.m}
+Funkcja wyliczająca drugą normę wektora reszty z rozwiązania układu równań liniowych.
+\begin{minted}{matlab}
+function out = residuum(A, b, x)
+    out = A * x - b;
+end
+\end{minted}
+
+\subsection{validateinput.m}
+Funkcja sprawdzająca, czy przekazane dane spełniają podstawowe założenia.
+\begin{minted}{matlab}
+function [] = validateinput(matrix, vector)
+    [ mat_rowcount, mat_colcount ] = size(matrix);
+    [ vec_rowcount, vec_colcount ] = size(vector);
+    assert(mat_rowcount == mat_colcount, "A square matrix is required");
+    assert(vec_rowcount == mat_rowcount, "Matrix and vector have uncompatible sizes");
+    assert(vec_colcount == 1, "A column vector is required");
+end
+\end{minted}
+
+\end{document}

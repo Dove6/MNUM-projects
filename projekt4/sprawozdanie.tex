@@ -1,0 +1,595 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, margin=2.00cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{minted}
+\usepackage{parskip}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage[justification=centering]{caption}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{multicol}
+
+\graphicspath{ {images/} }
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\thesection}{\arabic{section}.}
+\renewcommand{\thesubsection}{\thesection\arabic{subsection}.}
+\setminted{breaklines}
+\hyphenpenalty=10000
+\emergencystretch=\maxdimen
+\captionsetup[table]{name=Tabela}
+\captionsetup[figure]{name=Wykres}
+
+\title{Sprawozdanie z wykonania zadania 4.14}
+\author{Dawid Sygocki}
+\date{\today}
+
+\begin{document}
+\makeatletter
+{\huge \@title} \\
+\textsl{\large Autor: \@author, nr indeksu: 304108, grupa: wtorek 14:15}
+\makeatother
+
+\section{Wprowadzenie}
+Niniejszy raport przedstawia rezultaty wykonania zadania projektowego nr 4, które skupiało się na metodach różnicowych. Projekt dzielił się na trzy zadania, gdzie każde odpowiadało implementacji jednej z metod: klasycznej Rungego-Kutty ze stałym krokiem, predyktora-korektora na podstawie metody Adamsa rzędu 4 ze stałym krokiem oraz Rungego-Kutty rzędu 4 ze zmiennym krokiem.
+
+Każde z zadań badało układ dwóch równań różniczkowych:
+\[
+\begin{cases}
+x_1' = x_2 + x_1 (0,9 - x_1^2 - x_2^2) \\
+x_2' = -x_1 + x_2 (0,9 - x_1^2 - x_2^2)
+\end{cases}
+\]
+na przedziale czasowym \( \langle0; 20\rangle \) dla czterech warunków początkowych:
+\begin{center}
+a) \( \begin{bmatrix} 10 \\ 9 \end{bmatrix} \),
+b) \( \begin{bmatrix} 0 \\ 7 \end{bmatrix} \),
+c) \( \begin{bmatrix} 7 \\ 0 \end{bmatrix} \),
+d) \( \begin{bmatrix} 0,001 \\ 0,001 \end{bmatrix} \).
+\end{center}
+
+\section{Zadanie \textrm{I}. Metoda RK4 ze stałym krokiem}
+Metoda Rungego-Kutty określona jest ogólnie wzorem:
+\[ y_n = y_{n-1} + h \cdot \sum_{i=1}^m w_i k_i \text{,} \]
+gdzie 
+\(
+k_i =
+\begin{cases}
+f(x_n, y_{n-1}), \quad \text{dla } i=1 \\
+f(x_n + h\cdot\sum_{j=1}^{i-1} a_{ij}, y_{n-1} + h\cdot\sum_{j=1}^{i-1} a_{ij} k_j), \quad \text{dla } i=2,3,...,m
+\end{cases}
+\)
+
+Jak wynika z przytoczonego równania, omawiana metoda należy do grupy metod jednokrokowych, tj.~do obliczenia kolejnego punktu rozwiązania wymagana jest znajomość jedynie punktu bezpośrednio go poprzedzającego.
+
+Badana wersja metody, zwana również klasyczną, jest popularna w praktycznym zastosowaniu, ponieważ ma najlepszy stosunek dokładności (rząd \( p=4 \)) do liczby obliczeń (\( m=4 \) obliczenia wartości funkcji w każdym kroku).
+
+\subsection{Szacowanie błędu}
+
+W implementacji błąd metody szacowany jest wedle zasady podwójnego kroku. Wymaga to w~każdym kroku równoległego obliczenia kolejnego punktu zdyskretyzowanego rozwiązania poprzez wykonanie dwóch kroków dwukrotnie mniejszych. Następnie ,,konkurujące'' wartości należy podstawić do wzoru:
+\[ \delta_n(h) = \frac{2^p}{2^p - 1} (y_n^{(2)} - y_n^{(1)}) \text{,}\]
+gdzie \( y_n^{(2)} \) jest wartością obliczoną dwoma półkrokami, a \( y_n^{(1)} \) jednym zwykłym.
+
+W podręczniku do przedmiotu zawarta była porada, by wykorzystywać otrzymany w metodzie podwójnego kroku dokładniejszy punkt \( y_n^{(2)} \) do dalszych obliczeń (przy jednoczesnym użyciu alternatywnego wzoru na szacowanie mniejszego błędu), zignorowałem ją jednak, by porównanie implementacji różnych metod różnicowych było wierniejsze.
+
+\subsection{Graficzna analiza rozwiązania}
+Jak zostało to zalecone w poleceniu, w celu znalezienia optimum wykonałem dla każdego punktu startowego kilka(naście) prób z~różnymi długościami kroku. Zaczynałem od znalezienia maksymalnej wartości kroku, dla której metoda pozostawała zbieżna. Przykładowo dla przebiegu przedstawionego na wykresie \ref{fig:1a} była to wartość ok.~0,01327. Co ciekawe, rozwiązanie było najbardziej skore rozbiec się na początku trajektorii (np.~dla wykresu \ref{fig:1a} -- prawy górny róg). Podobną tendencję widać dla wszystkich punktów startowych znajdujących się na zewnątrz pierścienia, w którym trajektoria ruchu ulega stabilizacji. Pierścień ten ma środek w okolicach punktu (0, 0), a jego promień mierzy niecałą 1 jednostkę. W jego otoczeniu nawet trajektorie oznaczone na wykresach jako te ze zbyt dużym krokiem (i początkowo wykazujące chęć ,,ucieczki'') nie przejawiały sporych odstępstw od domniemanej poprawnej wartości (potwierdzanej matlabową funkcją \texttt{ode45}). Dlatego też przy eksperymentalnym wyznaczaniu optymalnego kroku zwracałem uwagę właśnie na ,,ogonek'' wykresu. Zmiany dokładności wraz z krokiem były na nim najlepiej widoczne.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{1a}
+\centering
+\caption{Porównanie wyników implementacji metody RK4 dla optymalnej i zbyt dużej długości kroku z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe a)}
+\label{fig:1a}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{1b}
+\centering
+\caption{Porównanie wyników implementacji metody RK4 dla optymalnej i zbyt dużej długości kroku z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe b)}
+\label{fig:1b}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{1c}
+\centering
+\caption{Porównanie wyników implementacji metody RK4 dla optymalnej i zbyt dużej długości kroku z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe c)}
+\label{fig:1c}
+\end{figure}
+\FloatBarrier
+
+Warunki początkowe d) były na tyle korzystne, że możliwe było zastosowanie kroku o długości nawet ponad 2 jednostek czasowych. Dzięki takiemu szerokiemu zakresowi zbieżności udało mi się przedstawić na wykresie \ref{fig:1d} rzeczywiście ,,kanciastą'' trajektorię dla kroku zbyt dużego.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{1d}
+\centering
+\caption{Porównanie wyników implementacji metody RK4 dla optymalnej i zbyt dużej długości kroku z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe d)}
+\label{fig:1d}
+\end{figure}
+\FloatBarrier
+
+\section{Zadanie \textrm{II}. Metoda APC4 ze stałym krokiem}
+Metody Adamsa wynikają z zamiany równania różniczkowego na równoważne mu równanie całkowe (na przedziale określonym długością kroku). Metody te należą do grupy metod wielokrokowych, tj.~obliczają następny punkt rozwiązania na podstawie kilku kolejnych punktów poprzedzających.
+
+Metody wielokrokowe dzielą się na jawne (gdzie kolejne wartości \( y_n \) zależą jedynie od już obliczonych punktów) oraz niejawne (gdzie zależnością może być również wartość bieżąca).
+
+Metody typu predyktor-korektor są praktycznymi implementacjami metod wielokrokowych, czyli rozwiązaniem hybrydowym łączącym zalety metod jawnych (ograniczenie ilości obliczeń) i niejawnych (zwiększenie dokładności i stabilności). Omawiana wersja algorytmu składa się w każdej iteracji z~następujących etapów:
+\begin{enumerate}
+    \item Predykcja: \( y_n^{[0]} = y_{n-1} + h \sum_{j=1}^k\beta_j f_{n-j} \),
+    \item Ewaluacja: \( f_n^{[0]} = f(x_n, y_n^{[0]}) \)
+    \item Korekcja: \( y_n = y_{n-1} + h \sum_{j=1}^k\beta_j^* f_{n-j} + h \beta_0^* f_n^{[0]} \)
+    \item Ewaluacja: \( f_n = f(x_n, y_n) \)
+\end{enumerate}
+
+Rolą predyktora jest wyznaczenie dobrego punktu startowego dla korektora, który iteracyjnie rozwiązuje układ równań nieliniowych (wynikający z metody niejawnej Adamsa).
+
+Implementowana metoda jest w wersji czterokrokowej, a więc w każdej iteracji potrzebuje 4~poprzednich punktów rozwiązania. Na start konieczne było zatem dostarczenie (wyłączając warunek początkowy) 3~kolejnych punktów wyliczonych z użyciem metody RK4 z poprzedniego zadania.
+
+Jak poprzednio, krok jest stały na całym badanym zakresie, więc musiał zostać dostosowany do fragmentów największej zmienności.
+
+\subsection{Szacowanie błędu}
+Schemat szacowania błędu w metodzie predyktor-korektor Adamsa bazuje na różnicy między rozwiązaniem przybliżonym w kroku predyktora a tym po korekcie. W implementowanej metodzie rząd predyktora i korektora jest równy, można zatem zastosować wzór postaci:
+\[ \delta_n(h) = \frac{c_{p+1}^*}{c_{p+1} - c_{p+1}^*} (y_n^{[0]} - y_n) \text{.}\]
+
+\subsection{Graficzna analiza rozwiązania}
+Biorąc pod uwagę wcześniejsze doświadczenia z metodą RK4 ze stałym krokiem, która dla zbyt dużych wartości \( h \) rozbiegała się już w pierwszych iteracjach, łatwo było mi wyznaczyć górny limit sensownych wartości kroku. Predyktor-korektor Adamsa miał jednak większe problemu z~badanym układem i warunkami początkowymi, dlatego uzyskanie przystępnych wyników wizualnych wymagało kilkukrotnego zmniejszenia długości kroku. Dla zbyt dużych kroków trajektorie często ,,przestrzeliwały'' miejsce oscylacji, a po zbiegnięciu do niego zachowywały pewien odstęp (tj.~miały promień mniejszy lub większy niż docelowy pierścień).
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{2a}
+\centering
+\caption{Porównanie wyników implementacji metody predyktor-korektor Adamsa 4 dla optymalnej i zbyt dużej długości kroku z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe a)}
+\label{fig:2a}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{2b}
+\centering
+\caption{Porównanie wyników implementacji metody predyktor-korektor Adamsa 4 dla optymalnej i zbyt dużej długości kroku z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe b)}
+\label{fig:2b}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{2c}
+\centering
+\caption{Porównanie wyników implementacji metody predyktor-korektor Adamsa 4 dla optymalnej i zbyt dużej długości kroku z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe c)}
+\label{fig:2c}
+\end{figure}
+\FloatBarrier
+
+Ciekawy przypadek stanowi przykład ostatni (wykres \ref{fig:2d}), gdzie przestrzeń \( \langle-1; 1\rangle^2 \) widoczna jest w sporym powiększeniu. Pozwala to na zauważenie wspomnianej różnicy w promieniu tworzonych przez trajektorię okręgów (przy odpowiednio dużym kroku).
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{2d}
+\centering
+\caption{Porównanie wyników implementacji metody predyktor-korektor Adamsa 4 dla optymalnej i zbyt dużej długości kroku z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe d)}
+\label{fig:2d}
+\end{figure}
+\FloatBarrier
+
+\section{Zadanie \textrm{III}. Metoda RK4 ze zmiennym krokiem}
+Ostatnie zadanie wykorzystuje ponownie metodę Rungego-Kutty, ale używa prostego algorytmu do wyznaczenia długości kroku w każdej iteracji (zależnie od zmienności trajektorii). Pozwala to na oszczędność obliczeniową w miejscach, które na to pozwalają -- w przypadku kroku stałego konieczne było przyjęcie dla całego badanego zakresu wartości odpowiadającej przedziałowi największej zmienności.
+
+Algorytm w każdej iteracji dokonuje ewaluacji współczynnika \( \alpha \), który decyduje o tym, czy krok powinien być zwiększony, czy zmniejszony. Nadmierne zmiany ograniczane są przez następujące parametry: parametr bezpieczeństwa \( s \), maksymalny stosunek kroku nowego do poprzedniego \( \beta \) oraz minimalną długość kroku \( h_{min} \).
+
+\subsection{Szacowanie błędu}
+Błąd jest szacowany identycznie, jak w zadaniu pierwszym -- program wykorzystuje zasadę podwójnego kroku. Uzyskana wartość używana jest w algorytmie korygującym długość kroku:
+\[ \alpha = \min (\frac{|\mathbf{y_n}|\cdot \varepsilon_w + \varepsilon_b}{\mathbf{\delta_n}(h)})^{\frac{1}{p+1}} \text{,}\]
+gdzie \( \varepsilon_w \) i \( \varepsilon_b \) to odpowiednio maksymalny błąd względny i bezwzględny zdefiniowany przez użytkownika. Wytłuszczone symbole \( \mathbf{y_n} \) i \( \mathbf{\delta_n} \) to wartości wektorowe, stąd współczynnik korekcji kroku \( \alpha \) obliczany jest dla elementu rozwiązania z największym błędem.
+
+\subsection{Podsumowanie graficzne}
+Wykresy nie pozostawiają wątpliwości: dynamiczne dostosowywanie kroku to świetne rozwiązanie, dzięki zastosowaniu którego możliwe jest uzyskanie ,,gładkiej'' trajektorii ruchu bez ręcznego eksperymentowania.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{3a}
+\centering
+\caption{Porównanie wyników implementacji metody RK4 ze zmiennym krokiem z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe a)}
+\label{fig:3a}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{3b}
+\centering
+\caption{Porównanie wyników implementacji metody RK4 ze zmiennym krokiem z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe b)}
+\label{fig:3b}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{3c}
+\centering
+\caption{Porównanie wyników implementacji metody RK4 ze zmiennym krokiem z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe c)}
+\label{fig:3c}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{3d}
+\centering
+\caption{Porównanie wyników implementacji metody RK4 ze zmiennym krokiem z~wbudowaną funkcją \texttt{ode45} -- warunki początkowe d)}
+\label{fig:3d}
+\end{figure}
+\FloatBarrier
+
+\section{Wnioski, porównanie}
+Dla iloczynu kartezjańskiego badanych metod i danych warunków początkowych zebrałem dane analityczne podsumowujące ich efektywność. Przedstawiłem je w tabeli \ref{table:summary}.
+\begin{table}[!htbp]
+\centering
+\begin{longtable}{|cc|c|c|c|c|c|}
+\hline
+    \multicolumn{2}{|c|}{\textbf{Metoda}} & \textbf{Warunki} & \textbf{Liczba} & \textbf{Czas} & \textbf{Średni} & \textbf{Maksymalny} \\
+     & \setcounter{table}{0} & \textbf{początkowe} & \textbf{iteracji} & \textbf{obliczeń [s]} & \textbf{błąd} & \textbf{błąd} \\
+    \hline\hline
+    \multirow{4}{*}{\rotatebox[origin=c]{90}{RK4}} & \multirow{4}{*}{\rotatebox[origin=c]{90}{k. stały}} & a & 2667 & 0,1441 & 9,3044 \(\cdot10^{-4} \) & 2,4815 \(\cdot10^{\hphantom{-}0} \) \\ \cline{3-7}
+     & & b & 1143 & 0,0624 & 1,9159 \(\cdot10^{-4} \) & 0,2186 \(\cdot10^{\hphantom{-}0} \) \\ \cline{3-7}
+     & & c & 1143 & 0,0411 & 1,9159 \(\cdot10^{-4} \) & 0,2186 \(\cdot10^{\hphantom{-}0} \) \\ \cline{3-7}
+     & & d &  201 & 0,0112 & 2,4078 \(\cdot10^{-7} \) & 3,7536 \(\cdot10^{-7} \) \\ \hline
+    \hline
+    \multirow{4}{*}{\rotatebox[origin=c]{90}{APC4}} & \multirow{4}{*}{\rotatebox[origin=c]{90}{k. stały}} & a & 20001 & 0,2426 & 1,0817 \(\cdot10^{-5} \) & 0,0859 \(\cdot10^{\hphantom{-}0}\) \\ \cline{3-7}
+     & & b & 20001 & 0,1909 & 1,3332 \(\cdot10^{-6} \) & 0,0034 \(\cdot10^{\hphantom{-}0} \) \\ \cline{3-7}
+     & & c & 20001 & 0,2067 & 1,3332 \(\cdot10^{-6} \) & 0,0034 \(\cdot10^{\hphantom{-}0} \) \\ \cline{3-7}
+     & & d & 20001 & 0,1829 & 4,8791 \(\cdot10^{-8} \) & 7,7249 \(\cdot10^{-8} \) \\ \hline
+    \hline
+    \multirow{4}{*}{\rotatebox[origin=c]{90}{RK4}} & \multirow{4}{*}{\rotatebox[origin=c]{90}{k. zmienny}} & a & 77 & 0,0559 & 1,0684 \(\cdot10^{-4} \) & 6,4706 \(\cdot10^{-4} \) \\ \cline{3-7}
+     & & b & 234 & 0,0192 & 3,3787 \(\cdot10^{-7} \) & 6,9776 \(\cdot10^{-7} \) \\ \cline{3-7}
+     & & c & 133 & 0,0224 & 4,7237 \(\cdot10^{-6} \) & 1,1166 \(\cdot10^{-5} \) \\ \cline{3-7}
+     & & d & 172 & 0,0201 & 3,7242 \(\cdot10^{-7} \) & 6,0967 \(\cdot10^{-7} \) \\ \hline
+\end{longtable}
+\caption{Zabrane dane analityczne}
+\label{table:summary}
+\end{table}
+\FloatBarrier
+
+Na podstawie zgromadzonych informacji widać od razu przewagę metody RK4 ze zmiennym krokiem nad pozostałymi. Realizuje ona swoje zadanie szybko, zamyka się w relatywnie niewielkiej liczbie iteracji, a błąd nie odstaje od konkurencyjnych wyników (przy czym istnieje możliwość bezpośredniego sterowania nim poprzez parametry algorytmu).
+
+Jeśli chodzi o liczbę iteracji koniecznych do wykonania, by efekt wizualny był zadowalający, najgorzej poradził sobie predyktor-korektor Adamsa. W związku z tym obliczenia z jego użyciem były również najkosztowniejsze czasowo.
+
+Moją uwagę zwrócił spory maksymalny błąd w metodach ze stałym krokiem dla warunków początkowych a) -- c). Pozwoliłem sobie więc na wykonanie dodatkowych badań i przedstawienie ich w formie wykresów.
+
+Jak widać na rysunkach \ref{fig:a_err}, \ref{fig:b_err} i \ref{fig:c_err}, wspomniany błąd maksymalny występuje zaraz na początku obliczeń. Jest to zapewne związane z omawianym już początkowym dążeniem układu do rozbieżności. \\
+Algorytm ze zmiennym krokiem zachowuje się tu zgoła odmiennie, zaczynając obliczenia z błędem \textit{minimalnym}. Niewątpliwie zdolności adaptacyjne zapewniają mu łagodny start. Potem algorytm próbuje dostosować się do wyznaczonego poziomu błędu maksymalnego, stabilizując się lub oscylując tuż pod nim.
+
+Na przestrzeni wykresów utrzymuje się następująca tendencja: po stabilizacji najmniejszym błędem cechuje się algorytm Rungego-Kutty ze stałym krokiem, parę rzędów wielkości większy błąd ma algorytm predyktor-korektor i wreszcie największy błąd reprezentuje algorytm RK ze zmiennym krokiem. Inne wyniki przedstawia dopiero przypadek d) (rys. \ref{fig:d_err}), gdzie wszystkie metody wykazują błędy zbliżone, a największą dokładność przejawia zespół metod Adamsa. \\
+Warto jednak pamiętać, że wartości błędów są w zadaniach jedynie szacowane -- nie da się ich wyznaczyć dokładnie, stąd szukanie stałego kroku optymalnego czy ocena jakości trajektorii przy kroku zmiennym dokonywane były głównie organoleptycznie.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{a_err}
+\centering
+\caption{Porównanie normy błędu badanych implementacji dla warunków początkowych a)}
+\label{fig:a_err}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{b_err}
+\centering
+\caption{Porównanie normy błędu badanych implementacji dla warunków początkowych b)}
+\label{fig:b_err}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{c_err}
+\centering
+\caption{Porównanie normy błędu badanych implementacji dla warunków początkowych c)}
+\label{fig:c_err}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=14cm]{d_err}
+\centering
+\caption{Porównanie normy błędu badanych implementacji dla warunków początkowych d)}
+\label{fig:d_err}
+\end{figure}
+\FloatBarrier
+
+\clearpage
+\section{Wydruk wykorzystanego kodu}
+
+\subsection{RK4conststep.m}
+Implementacja metody Rungego-Kutty rzędu 4 ze stałym krokiem.
+\begin{minted}{matlab}
+function [t, result, errors] = RK4conststep(eqSys, tSpan, x0, stepSize)
+    assert(length(tSpan) == 2, "TimeSpan must consist only of beginning and ending value");
+    t = tSpan(1):stepSize:(tSpan(2) - eps);
+    result = zeros(length(t), length(x0));
+    result(1, :) = x0;
+    errors = zeros(size(result));
+    errors(1, :) = ones(1, length(x0)) * eps;
+    errorConst = 16 / 15;
+
+    for i=2:length(t)
+        result(i, :) = RK4step(eqSys, result(i - 1, :), stepSize);
+        % approximation error estimate
+        helperResult = RK4step(eqSys, result(i - 1, :), stepSize / 2);
+        helperResult = RK4step(eqSys, helperResult, stepSize / 2);
+        errors(i, :) = abs(errorConst * (helperResult - result(i, :)));
+        if any([isnan(errors(i, :)), isnan(result(i, :))])
+            error("Method diverges.")
+        end
+    end
+end
+\end{minted}
+
+\subsection{APC4conststep.m}
+Implementacja metody predyktor-korektor Adamsa rzędu 4 ze stałym krokiem.
+\begin{minted}{matlab}
+function [t, result, errors] = APC4conststep(eqSys, tSpan, x0, stepSize)
+    assert(length(tSpan) == 2, "TimeSpan must consist only of beginning and ending value");
+    t = tSpan(1):stepSize:(tSpan(2) - eps);
+    result = zeros(length(t), length(x0));
+    result(1, :) = x0;
+    evalResult = zeros(length(t), length(x0));
+    evalResult(1, :) = eqSys(result(1, :));
+    errors = zeros(size(result));
+    errors(1, :) = ones(1, length(x0)) * eps;
+
+    % Adams Predictor-Corrector (4-step)
+    explicitBeta = [55 / 24, -59 / 24, 37 / 24, -9 / 24];
+    implicitBeta = [251 / 720, 646 / 720, -264 / 720, 106 / 720, -19 / 720];
+    % c*_{p+1} / (c_{p+1} - c*_{p+1}) = (19 / 720) / ((-251 / 720) - (19 / 720))
+    errorConst = -19 / 270;
+
+    % Adams PC needs k starting points, k = 4
+    [~, RK4result, RK4errors] = RK4conststep(eqSys, [t(1), t(4) + stepSize / 2], x0, stepSize);
+    result(2:4, :) = RK4result(2:4, :);
+    errors(2:4, :) = RK4errors(2:4, :);
+    evalResult(2, :) = eqSys(result(2, :));
+    evalResult(3, :) = eqSys(result(3, :));
+    evalResult(4, :) = eqSys(result(4, :));
+
+    for i=5:length(t)
+        % predictor (P_4)
+        prediction = result(i - 1, :) + stepSize * (explicitBeta * evalResult((i - 4):(i - 1), :));
+        % evaluator (E)
+        evalResult(i, :) = eqSys(prediction);
+        % corrector (C_4)
+        result(i, :) = result(i - 1, :) + stepSize * (implicitBeta * evalResult((i - 4):i, :));
+        % evaluator (E)
+        evalResult(i, :) = eqSys(result(i, :));
+        % approximation error estimate
+        errors(i, :) = abs(errorConst * (prediction - result(i, :)));
+        if any([isnan(errors(i, :)), isnan(result(i, :))])
+            error("Method diverges.")
+        end
+    end
+end
+\end{minted}
+
+\subsection{RK4varstep.m}
+Implementacja metody Rungego-Kutty rzędu 4 ze zmiennym krokiem.
+\begin{minted}{matlab}
+function [t, result, errors] = RK4varstep(eqSys, tSpan, x0, initStepSize, minStepSize, absTolerance, relTolerance)
+    assert(length(absTolerance) == 1, "Absolute tolerance must be a scalar value");
+    assert(absTolerance > 0, "Absolute tolerance must be positive");
+    assert(length(relTolerance) == 1, "Relative tolerance must be a scalar value");
+    assert(relTolerance > 0, "Relative tolerance must be positive");
+    assert(length(tSpan) == 2, "TimeSpan must consist only of beginning and ending value");
+    t(1) = tSpan(1);
+    result(1, :) = x0;
+    errors(1, :) = ones(1, length(x0)) * eps;
+    errorConst = 16 / 15;
+    safetyCoeff = 0.9;
+    maxStepMultiplier = 5;
+
+    stepSize = initStepSize;
+    i = 2;
+    while t(i - 1) < tSpan(2)
+        t(i) = t(i - 1) + stepSize;
+        result(i, :) = RK4step(eqSys, result(i - 1, :), stepSize);
+        % approximation error estimate
+        helperResult = RK4step(eqSys, result(i - 1, :), stepSize / 2);
+        helperResult = RK4step(eqSys, helperResult, stepSize / 2);
+        errors(i, :) = abs(errorConst * (helperResult - result(i, :)));
+        % step size correction
+        tolerance = abs(result(i, :)) * relTolerance + absTolerance;
+        alpha = min((tolerance ./ errors(i, :)) .^ (1 / 5));
+        if isnan(alpha)
+            alpha = 0.99;
+        end
+        if safetyCoeff * alpha >= 1
+            stepSize = min([safetyCoeff * alpha * stepSize, maxStepMultiplier * stepSize, tSpan(2) - t(i)]);
+            i = i + 1;
+        else
+            stepSize = safetyCoeff * alpha * stepSize;
+            assert(stepSize > minStepSize, "Step below the specified limit");
+        end
+    end
+end
+\end{minted}
+
+\subsection{RK4step.m}
+Pojedynczy krok klasycznej (rzędu 4) metody Rungego-Kutty.
+\begin{minted}{matlab}
+function [result] = RK4step(eqSys, x, stepSize)
+    % classic Runge-Kutta method
+    w = [1, 2, 2, 1];
+    k = zeros(4, length(x));
+    k(1, :) = eqSys(x);
+    k(2, :) = eqSys(x + stepSize * k(1, :) / 2);
+    k(3, :) = eqSys(x + stepSize * k(2, :) / 2);
+    k(4, :) = eqSys(x + stepSize * k(3, :));
+    result = x + stepSize * (w * k) / 6;
+end
+\end{minted}
+
+\subsection{equationsystem.m}
+Dane wejściowe -- układ równań różniczkowych.
+\begin{minted}{matlab}
+function [result] = equationsystem(x)
+    assert(length(x) == 2, "x must be of length 2");
+    result = [
+        x(2) + x(1) * (0.9 - x(1)^2 - x(2)^2);  % x1'
+        -x(1) + x(2) * (0.9 - x(1)^2 - x(2)^2)  % x2'
+    ];
+end
+\end{minted}
+
+\subsection{getinitialposition.m}
+Dane wejściowe -- punkty startowe.
+\begin{minted}{matlab}
+function [initialPos] = getinitialposition(example)
+    if example == "a"
+        initialPos = [10; 9];
+    elseif example == "b"
+        initialPos = [0; 7];
+    elseif example == "c"
+        initialPos = [7; 0];
+    elseif example == "d"
+        initialPos = [0.001; 0.001];
+    else
+        error("Example must be one of: a, b, c, d");
+    end
+end
+\end{minted}
+
+\subsection{getrange.m}
+Dane wejściowe -- badany przedział czasowy.
+\begin{minted}{matlab}
+function [range] = getrange()
+    range = [0, 20];
+end
+\end{minted}
+
+\subsection{projekt4.m}
+Zestaw funkcji do rysowania i opisu testowanych metod.
+\begin{minted}{matlab}
+function [] = projekt4(taskNo)
+    if taskNo == 1
+        zadanie1();
+    elseif taskNo == 2
+        zadanie2();
+    elseif taskNo == 3
+        zadanie3();
+    else
+        error("TaskNo must be one of: 1, 2, 3");
+    end
+end
+
+function [] = zadanie1()
+    % Absolute maximum:
+    % * 0.01327215
+    % * 0.049965
+    % * 0.049965
+    % * 2.225
+
+    conststepwrapper(1, "a", 0.0075, 0.01327, ["northwest", "northeast"]);
+    conststepwrapper(1, "b", 0.0175, 0.04996, ["northeast", "northeast"]);
+    conststepwrapper(1, "c", 0.0175, 0.04996, ["northeast", "northeast"]);
+    conststepwrapper(1, "d", 0.1, 0.5, ["northeast", "southeast"]);
+end
+
+function [] = zadanie2()
+    % Absolute maximum:
+    % * 0.006790043245
+    % * 0.0255
+    % * 0.0255
+    % * 2.488445; watch out: 0.19647 - 0.74075
+
+    conststepwrapper(2, "a", 0.001, 0.004, ["northwest", "northeast"]);
+    conststepwrapper(2, "b", 0.001, 0.01, ["northeast", "northeast"]);
+    conststepwrapper(2, "c", 0.001, 0.01, ["northeast", "northeast"]);
+    conststepwrapper(2, "d", 0.001, 0.05, ["northeast", "southeast"]);
+end
+
+function [] = zadanie3()
+    % OK parameters:
+    % * 0.01, 10e-15, 10e-5, 10e-5
+    % * 0.1, 10e-15, 10e-10, 10e-7
+    % * 0.1, 10e-15, 10e-7, 10e-6
+    % * 0.1, 10e-15, 10e-8, 10e-7
+
+    varstepwrapper("a", 0.01, 10e-15, 10e-5, 10e-5, ["northwest", "southeast"]);
+    varstepwrapper("b", 0.1, 10e-15, 10e-10, 10e-7, ["northeast", "southeast"]);
+    varstepwrapper("c", 0.1, 10e-15, 10e-7, 10e-6, ["northeast", "southeast"]);
+    varstepwrapper("d", 0.1, 10e-15, 10e-8, 10e-7, ["northeast", "southeast"]);
+end
+
+function [] = conststepwrapper(taskNo, example, optimalStep, tooBigStep, legendLocation)
+    assert(length(legendLocation) == 2, ...
+        "LegendLocation must contain two strings: one for graph and one for error comparison");
+    if taskNo == 1
+        method = @RK4conststep;
+        methodName = 'RK4';
+    elseif taskNo == 2
+        method = @APC4conststep;
+        methodName = 'APC4';
+    else
+        error("TaskNo must be one of: 1, 2");
+    end
+    tic;
+    [tChosen, yChosen, errChosen] = method(@equationsystem, getrange(), getinitialposition(example), optimalStep);
+    timeChosen = toc;
+    [~, yBigger, ~] = method(@equationsystem, getrange(), getinitialposition(example), tooBigStep);
+    [~, yOde] = ode45(@(t, x) equationsystem(x), getrange(), getinitialposition(example));
+    % comparison of step size
+    figure("Name", ['Graph comparison for ', num2str(taskNo), char(example)]);
+    colororder(["#000000", "#e6194b", "#3cb44b"]);
+    plot(yChosen(:, 1), yChosen(:, 2), "LineWidth", 1);
+    hold on;
+    plot(yBigger(:, 1), yBigger(:, 2));
+    plot(yOde(:, 1), yOde(:, 2));
+    hold off;
+    legend([methodName, ', step: ', num2str(optimalStep)], ...
+        [methodName, ', step: ', num2str(tooBigStep), ' (too big)'], ...
+        "ODE45", "Location", legendLocation(1));
+    xlabel("x1");
+    ylabel("x2");
+    % summary
+    ['Summary for ', num2str(taskNo), char(example)]
+    iterationCount = length(tChosen)
+    calculationTime = timeChosen
+    averageError = mean(cellfun(@norm, num2cell(errChosen, 2)))
+    maximalError = max(cellfun(@norm, num2cell(errChosen, 2)))
+end
+
+function [] = varstepwrapper(example, initStepSize, minStepSize, absTolerance, relTolerance, legendLocation)
+    tic;
+    [tChosen, yChosen, errChosen] = RK4varstep(@equationsystem, getrange(), ...
+        getinitialposition(example), initStepSize, minStepSize, absTolerance, relTolerance);
+    timeChosen = toc;
+    [~, yOde] = ode45(@(t, x) equationsystem(x), getrange(), getinitialposition(example));
+    % comparison of step size
+    figure("Name", ['Graph comparison for 3', char(example)]);
+    colororder(["#000000", "#e6194b"]);
+    plot(yChosen(:, 1), yChosen(:, 2), "LineWidth", 1);
+    hold on;
+    plot(yOde(:, 1), yOde(:, 2));
+    hold off;
+    legend("RK4, dynamic step", "ODE45", "Location", legendLocation(1));
+    xlabel("x1");
+    ylabel("x2");
+    % summary
+    ['Summary for 3', char(example)]
+    iterationCount = length(tChosen)
+    calculationTime = timeChosen
+    averageError = mean(cellfun(@norm, num2cell(errChosen, 2)))
+    maximalError = max(cellfun(@norm, num2cell(errChosen, 2)))
+end
+\end{minted}
+
+\end{document}

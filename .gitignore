@@ -1,0 +1,13 @@
+backup/
+*kopia*.*
+*.7z
+*.bak
+
+# Intermediate results
+*.docx
+*.png
+*.txt
+*.xlsx
+
+# Compiled reports/tasks
+*.pdf

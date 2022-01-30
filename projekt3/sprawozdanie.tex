@@ -1,0 +1,652 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, margin=2.00cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{minted}
+\usepackage{parskip}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage[justification=centering]{caption}
+\usepackage{longtable}
+
+\graphicspath{ {images/} }
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\thesection}{\arabic{section}.}
+\renewcommand{\thesubsection}{\thesection\arabic{subsection}.}
+\setminted{breaklines}
+\hyphenpenalty=10000
+\emergencystretch=\maxdimen
+\captionsetup[table]{name=Tabela}
+\captionsetup[figure]{name=Wykres}
+
+\title{Sprawozdanie z wykonania zadania 3.14}
+\author{Dawid Sygocki}
+\date{\today}
+
+\begin{document}
+\makeatletter
+{\huge \@title} \\
+\textsl{\large Autor: \@author, nr indeksu: 304108, grupa: wtorek 14:15}
+\makeatother
+
+\section{Wprowadzenie}
+Niniejszy raport przedstawia rezultaty wykonania zadanie projektowego nr 3 powiązanego z~szukaniem zer funkcji nieliniowych. Projekt dzielił się na dwa podzadania, z których pierwsze skupiało się na rzeczywistych miejscach zerowych prostej funkcji na wskazanym przedziale, a drugie na pierwiastkach rzeczywistych i zespolonych wielomianu.
+
+\section{Zadanie I}
+Przedmiotem badań była w tym zadaniu funkcja:
+\[ f(x) = 3,1 - 3x - e^{-x}, \quad x \in \langle -5; 10 \rangle \]
+Należało dokonać porównania dwóch zadanych metod: \textit{regula falsi} i Newtona.
+
+Podsumowanie danych wejściowych i wyników stanowi wykres \ref{fig:zad1mix} przedstawiający przebieg funkcji, jej miejsca zerowe oraz startowe punkty/przedziały używanych algorytmów.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=16cm]{zad1mix}
+\centering
+\caption{Analiza badanego przedziału z zaznaczeniem wejścia badanych metod}
+\label{fig:zad1mix}
+\end{figure}
+\FloatBarrier
+
+\subsection{Metoda \textit{regula falsi}}
+\textit{Regula falsi} (a. \textit{false position}) jest metodą globalnie zbieżną, ponieważ w miarę przesuwania granic przedziału zachowuje przedział izolacji pierwiastka. Jej zasada działania jest prosta -- dla granic przedziału leżących po różnych stronach zera wyznaczana jest sieczna przechodząca przez oś OX. Następnie pozycja jednego z krańców przedziału izolacji przesuwana jest do wyznaczonej wartości. Operacja jest powtarzana do momentu spełnienia wymagań dokładności wartości funkcji i/lub szerokości przedziału.
+
+Alternatywą do tej metody, jeśli chodzi o globalną zbieżność, jest metoda bisekcji, gdzie zamiast prowadzenia siecznych przesuwa się jeden z krańców przedziału do jego środka. Wnioskować można, że szybkość zbieżności metody bisekcji jest niezależna od badanej funkcji, czego nie można powiedzieć o metodzie fałszywej reguły. W klasycznym wariancie jeden z krańców jest ,,przymocowany'', a~porusza się wyłącznie drugi, przez co zbieżność może być powolna, szczególnie dla wartości funkcji bliskich zeru.
+
+Rozwiązaniem tego problemu jest modyfikacja ,,popychająca'' ku zeru krańce osiadłe w miejscu na dłuższy czas. Przy zachowaniu globalnego charakteru zbieżności metody pozwala to na poprawę jej charakterystyki -- z liniowej na superliniową.
+
+Zgodnie z przedstawionym wcześniej rysunkiem \ref{fig:zad1mix}, podawane algorytmowi przedziały startowe były możliwie jak największe, sięgając od granicy ustalonego w zadaniu zakresu aż do drugiego miejsca zerowego. Sytuacja taka nie sprawiła metodzie żadnych problemów, z właściwą sobie szybkością zbiegała ona do celu.
+
+Ze względu na pokaźną objętość, dokładne tabele z wartościami w każdej iteracji umieszczone zostały na końcu dokumentu, w sekcji \ref{sec:samples} (po wydrukach kodu).  
+Warto jednak już teraz wspomnieć, że~przy dokładności \( 10^{-12} \) algorytm potrzebował dla zakresu \( \langle -5; 0.897 \rangle \) aż 261 kroków, natomiast dla \( \langle -2.303; 10 \rangle \) 20 kroków.  
+Porównanie charakterystyki zbieżności zostanie przedstawione w sekcji dotyczącej metody stycznych.
+
+\subsection{Metoda Newtona (stycznych)}
+
+Metoda Newtona, w odróżnieniu od poprzednio badanej, jest zbieżna kwadratowo, ale jedynie lokalnie. Oznacza to, że poza obszarem atrakcji pierwiastka może być rozbieżna. Dobrze więc wpierw doprecyzować zakres poszukiwań metodą o działaniu globalnym. Kolejną różnicą jest, że jako wejściowy argument metoda stycznych przyjmuje pojedynczy punkt, nie zaś dwie granice przedziału.
+
+Algorytm wykorzystuje w każdym kroku liniowe przybliżenie funkcji (za pomocą pochodnej), zbliżając się w ten sposób do rozwiązania tym szybciej, im bardziej ,,stroma'' jest funkcja w otoczeniu pierwiastka.  
+Jeśli jednak funkcja w pobliżu zera jest wypłaszczona, metoda przyniesie słabe efekty (szczególnie dla pochodnej bliskiej zeru).
+
+Na cele zadania pochodna badanej funkcji została wyznaczona ręcznie:
+\[ y = e^{-x} - 3 \]
+
+Jak poprzednio, oczekiwana dokładność wynosiła \( 10^{-12} \).
+
+Na początek podsumowanie liczbowe: dla punktu startowego \( x = -5 \) algorytm musiał wykonać 8~kroków, a dla \( x = 10 \) zaledwie 4.
+
+Teraz pora na wspomniane wcześniej porównanie charakterystyki zbieżności. Przedstawione jest ono na poniższych wykresach (\ref{fig:zad1comp1} i \ref{fig:zad1comp2}). Jako pierwsze miejsce zerowe została przyjęta wartość ok. 0,8973, a jako drugie ok. -2,3037.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=16cm]{zad1comp1}
+\centering
+\caption{Porównanie zbieżności metod w okolicach pierwszego miejsca zerowego}
+\label{fig:zad1comp1}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=16cm]{zad1comp2}
+\centering
+\caption{Porównanie zbieżności metod w okolicach drugiego miejsca zerowego}
+\label{fig:zad1comp2}
+\end{figure}
+\FloatBarrier
+
+Na wykresach widać wyraźnie, że metoda Newtona cechuje się o wiele szybszą zbieżnością. Kilkoma sporymi skokami zmierza do rozwiązania, a potem je ostatecznie poprawia. Warto zaznaczyć, że~punkty startowe są dla metody wygodne, ponieważ funkcja jest stroma (szczególnie na obrzeżach).
+
+Metoda fałszywej reguły radzi sobie gorzej. Na początku i pod koniec działania algorytmu pozycja przybliżenie zmienia się bardzo powoli. Początkowy wolny start może wynikać z tego, że, mając do wyboru dwa krańce, algorytm wybrał ten sporo mniej stromy (doświadczalnie okazało się, że~implementacja przesuwa w obu przypadkach właśnie kraniec leżący ponad osią OX). Spowolnienie końcowe jest rezultatem zastosowania najprostszej, niezmodyfikowanej implementacji, w której zakres z jednej strony zbiega do pierwiastka, a z drugiej pozostaje w miejscu, przez co dłużej zajmuje spełnienie wymagań dot. minimalnej szerokości przedziału oraz dokładności zera.
+
+Jednakże, metoda Newtona nie jest idealna. Ciekawym odkryciem było, że podanie jej jako punktu startowego \( x = -1,1 \) skutkuje rozbieżnością. Takiego efektu bardziej spodziewałem się po dokładnym wierzchołku funkcji znajdującym się w punkcie \( x = -1,0986 \) (obliczonym ręcznie na~podstawie przyrównania pochodnej do zera, a więc uczynienia ją równoległą do osi OX, co tworzy sytuację blokującą algebraicznie -- dzielenie przez zero). Tam jednak metoda Newtona podaje przybliżenie poprawne, wykonując jedynie z początku potężny skok, a potem się stabilizując. Całkiem możliwe, że jest to skutek niedokładności maszynowej.
+
+\section{Zadanie II}
+
+Drugie zadanie traktowało o szukaniu pierwiastków rzeczywistych i zespolonych podanego wielomianu:
+\[ f(x) = -x^4 - 7x^3 + 7x^2 + 3x + 9 \]
+
+Wykorzystanym algorytmem miała być metoda Müllera, konkretnie wersja identyfikowana w~podręczniku jako MM2, wykorzystująca wartość funkcji i jej dwóch pierwszych pochodnych w~tym samym punkcie do poznania współczynników \(a\), \(b\) i \(c\) kolejnego przybliżenia. Wariant ten jest lekko efektywniejszy obliczeniowo niż interpolacja funkcją kwadratową w trzech punktach. Wielokrotna różniczkowalność właściwa wielomianom zapewnia, że pochodna drugiego rzędu zawsze będzie istniała.
+
+Metoda Müllera jest zbieżna lokalnie i prawie kwadratowo (rząd zbieżności = 1,84), a więc ma nieznacznie gorsze parametry od metody Newtona.
+
+W procesie obliczania kolejnych pierwiastków ważna jest deflacja, która pozwala ,,oczyścić'' wielomian z już odnalezionych zer. Dzięki temu możliwe jest rozpoczynanie szukania w tym samym wybranym miejscu bez obaw, że niewłaściwie wskaże się ponownie ten sam pierwiastek. Można też przy otrzymaniu odpowiednio niskiego stopnia wielomianu przejść do rozwiązywania go prostszą metodą (np. jako funkcji kwadratowej).  
+W swojej implementacji wykorzystuję do deflacji prosty schemat Hornera. Nie użyłem wersji sklejanej z uwagi na niewielką liczbę współczynników. Postanowiłem jednak dla pewności zastosować \textit{root polishing}, czyli doprecyzowanie wartości pierwiastków wyznaczonych na podstawie wielomianu będącego efektem dzielenia, korzystając z~oryginalnego wielomianu (tj. poprzez podanie przybliżonego pierwiastka jako punktu startowego dla np. bardziej wydajnej metody Newtona). Okazuje się, że dla danych z~zadania i to jest przesadną dokładnością, ponieważ nie doświadczyłem zysku precyzji (dla~określonej dokładności \( 10^{-12} \)).
+
+W swoim rozwiązaniu zadania drugiego używam zera jako wartości startowej ze względu na znalezioną w podręczniku do przedmiotu poradę głoszącą, że wyznaczanie pierwiastków od tych z~najmniejszym modułem do tych z największym prowadzi do zmniejszenia błędów obliczeniowych przy deflacji.
+
+Dla kolejnych wielomianów (coraz niższego stopnia) algorytm znajduje miejsca zerowe po 4, 3 i~wreszcie dwa razy po jednym kroku (dla trywialnego przypadku funkcji kwadratowej i liniowej).
+
+\begin{table}[!htbp]
+\centering
+\begin{longtable}{|c|}
+    \hline
+    -0.3273 + 0.8054i \\ \hline
+    -0.3273 - 0.8054i \\ \hline
+    1.5151 \\ \hline
+    -7.8605 \\ \hline
+\end{longtable}
+\label{table:roots}
+\caption{Lista pierwiastków badanej funkcji wyliczona za pomocą metody Müllera MM2}
+\end{table}
+\FloatBarrier
+
+\clearpage
+\section{Wydruk wykorzystanego kodu}
+
+\subsection{regulafalsi.m}
+Implementacja metody \textit{regula falsi} dla zadania I.
+\begin{minted}{matlab}
+function root = regulafalsi(func, startRange, valueTolerance, rangeWidthTolerance)
+    assert(size(startRange, 2) == 2, ...
+        "startRange: Expected vector of size 2");
+    assert(func(startRange(1)) * func(startRange(2)) < 0, ...
+        "func, startRange: Expected function values to be opposite at the ends of specified range");
+    assert(valueTolerance > 0);
+    assert(rangeWidthTolerance > 0);
+
+    a = min(startRange);
+    b = max(startRange);
+
+    while min(abs(func(a)), abs(func(b))) > valueTolerance && b - a > rangeWidthTolerance
+        c = (a * func(b) - b * func(a)) / (func(b) - func(a));
+        if func(a) * func(c) < 0
+            b = c;
+        else
+            a = c;
+        end
+    end
+
+    if abs(func(a)) < abs(func(b))
+        root = a;
+    else
+        root = b;
+    end
+end
+\end{minted}
+
+\subsection{newton.m}
+Implementacja metody Newtona dla zadania I.
+
+W przypadku rozbieżności szybko dochodzi do dzielenia wartości bliskich nieskończoności, co generuje w wyniku wartość NaN.
+\begin{minted}{matlab}
+function root = newton(func, derivative, startPoint, valueTolerance)
+    assert(valueTolerance > 0);
+
+    root = startPoint;
+
+    while abs(func(root)) > valueTolerance
+        root = root - func(root) / derivative(root)
+    end
+end
+
+\end{minted}
+
+\subsection{exponentialf.m}
+Funkcja wykorzystana w zadaniu I.
+\begin{minted}{matlab}
+function y = exponentialf(x)
+    y = -exp(-x) - 3*x + 3.1;
+end
+\end{minted}
+
+\subsection{exponentiald1.m}
+Pochodna funkcja w zadania I, potrzebna przy korzystaniu z metody Newtona.
+\begin{minted}{matlab}
+function y = exponentiald1(x)
+    y = exp(-x) - 3;
+end
+\end{minted}
+
+\subsection{zadanie2.m}
+Funkcja realizująca zadanie II.
+\begin{minted}{matlab}
+function roots = zadanie2(valueTolerance)
+    assert(valueTolerance > 0);
+
+    a = [-1, -7, 7, 3, 9];
+    roots = zeros(1, length(a) - 1);
+
+    q = a;
+    for i=1:length(roots)
+        roots(i) = mullerpolynomial(q, 0, valueTolerance);
+        % root polishing using Newton method
+        if i > 1
+            roots(i) = newton(@(x) polynomialf(x, q), @(x) polynomiald1(x, q), roots(i), valueTolerance);
+        end
+        q = horner(q, roots(i));
+    end
+end
+\end{minted}
+
+\subsection{mullerpolynomial.m}
+Implementacja algorytmu Müllera z użyciem pochodnych (MM2) służąca do szukania pierwiastków wielomianu z zadania II.
+\begin{minted}{matlab}
+function root = mullerpolynomial(coeffs, startPoint, valueTolerance)
+    % coeffs should be ordered from greatest to least index
+    % e.g. [a4, a3, a2, a1, a0]
+    assert(valueTolerance > 0);
+
+    root = startPoint;
+    while abs(polynomialf(root, coeffs)) > valueTolerance
+        funcValue = polynomialf(root, coeffs);
+        deriv1Value = polynomiald1(root, coeffs);
+        deriv2Value = polynomiald2(root, coeffs);
+        % divisor for z+
+        pDivisor = deriv1Value + sqrt(deriv1Value^2 - 2*funcValue*deriv2Value);
+        % divisor for z-
+        nDivisor = deriv1Value - sqrt(deriv1Value^2 - 2*funcValue*deriv2Value);
+        if abs(pDivisor) >= abs(nDivisor)
+            zMin = -2*funcValue / pDivisor;
+        else
+            zMin = -2*funcValue / nDivisor;
+        end
+        root = root + zMin;
+    end
+end
+\end{minted}
+
+\subsection{horner.m}
+Prosta implementacja deflacji czynnikiem liniowym - dzielenia wielomianów schematem Hornera.
+\begin{minted}{matlab}
+function q = horner(a, root)
+    % coeffs should be ordered from greatest to least index
+    % e.g. [a4, a3, a2, a1, a0]
+    q = zeros(1, length(a));
+    for i=2:length(q)
+        q(i) = a(i - 1) + q(i - 1) * root;
+    end
+    q = q(2:end);
+end
+\end{minted}
+
+\subsection{polynomialf.m}
+Funkcja wielomianowa parametryzowana współczynnikami.
+\begin{minted}{matlab}
+function y = polynomialf(x, coeffs)
+    % coeffs should be ordered from greatest to least index
+    % e.g. [a4, a3, a2, a1, a0]
+    y = sum(x .^ flip(0:(length(coeffs) - 1)) ...
+        .* coeffs);
+end
+\end{minted}
+
+\subsection{polynomiald1.m}
+Pierwsza pochodna funkcji wielomianowej parametryzowana jej współczynnikami.
+\begin{minted}{matlab}
+function y = polynomiald1(x, coeffs)
+    % coeffs should be ordered from greatest to least index
+    % e.g. [a4, a3, a2, a1, a0]
+    y = sum(x .^ flip(0:(length(coeffs) - 2)) ...
+        .* flip(1:(length(coeffs) - 1)) ...
+        .* coeffs(1:(end - 1)));
+end
+\end{minted}
+
+\subsection{polynomiald2.m}
+Druga pochodna funkcji wielomianowej parametryzowana jej współczynnikami.
+\begin{minted}{matlab}
+function y = polynomiald2(x, coeffs)
+    % coeffs should be ordered from greatest to least index
+    % e.g. [a4, a3, a2, a1, a0]
+    y = sum(x .^ flip(0:(length(coeffs) - 3)) ...
+        .* flip(1:(length(coeffs) - 2)) ...
+        .* flip(2:(length(coeffs) - 1)) ...
+        .* coeffs(1:(end - 2)));
+end
+\end{minted}
+
+\clearpage
+\section{Punkty otrzymane w kolejnych iteracjach algorytmów wykorzystanych w zadaniu I}
+\label{sec:samples}
+
+\subsection{Metoda \textit{regula falsi}, pierwsze miejsce zerowe}
+\begin{center}
+\begin{longtable}{|c|c|c|} 
+    \hline
+    \textbf{Iteracja} & \textbf{x} & \textbf{f(x)} \\
+    \hline\hline
+    0	&     8,970E-01	&   1,209E-03 \\ \hline
+    1	&     8,969E-01	&   1,351E-03 \\ \hline
+    2	&     8,969E-01	&   1,509E-03 \\ \hline
+    3	&     8,968E-01	&   1,686E-03 \\ \hline
+    4	&     8,967E-01	&   1,884E-03 \\ \hline
+    5	&     8,967E-01	&   2,105E-03 \\ \hline
+    6	&     8,966E-01	&   2,352E-03 \\ \hline
+    7	&     8,965E-01	&   2,627E-03 \\ \hline
+    8	&     8,963E-01	&   2,936E-03 \\ \hline
+    9	&     8,962E-01	&   3,280E-03 \\ \hline
+    10	&     8,961E-01	&   3,664E-03 \\ \hline
+    11	&     8,959E-01	&   4,094E-03 \\ \hline
+    12	&     8,957E-01	&   4,574E-03 \\ \hline
+    13	&     8,955E-01	&   5,111E-03 \\ \hline
+    14	&     8,953E-01	&   5,710E-03 \\ \hline
+    15	&     8,950E-01	&   6,379E-03 \\ \hline
+    16	&     8,947E-01	&   7,127E-03 \\ \hline
+    17	&     8,944E-01	&   7,962E-03 \\ \hline
+    18	&     8,940E-01	&   8,895E-03 \\ \hline
+    19	&     8,936E-01	&   9,937E-03 \\ \hline
+    20	&     8,932E-01	&   1,110E-02 \\ \hline
+    21	&     8,927E-01	&   1,240E-02 \\ \hline
+    22	&     8,921E-01	&   1,385E-02 \\ \hline
+    23	&     8,915E-01	&   1,548E-02 \\ \hline
+    24	&     8,908E-01	&   1,729E-02 \\ \hline
+    25	&     8,900E-01	&   1,931E-02 \\ \hline
+    26	&     8,891E-01	&   2,157E-02 \\ \hline
+    27	&     8,882E-01	&   2,410E-02 \\ \hline
+    28	&     8,871E-01	&   2,691E-02 \\ \hline
+    29	&     8,859E-01	&   3,006E-02 \\ \hline
+    30	&     8,845E-01	&   3,357E-02 \\ \hline
+    31	&     8,830E-01	&   3,749E-02 \\ \hline
+    32	&     8,813E-01	&   4,187E-02 \\ \hline
+    33	&     8,794E-01	&   4,675E-02 \\ \hline
+    34	&     8,773E-01	&   5,220E-02 \\ \hline
+    35	&     8,749E-01	&   5,828E-02 \\ \hline
+    36	&     8,723E-01	&   6,506E-02 \\ \hline
+    37	&     8,694E-01	&   7,263E-02 \\ \hline
+    38	&     8,661E-01	&   8,106E-02 \\ \hline
+    39	&     8,625E-01	&   9,047E-02 \\ \hline
+    40	&     8,584E-01	&   1,009E-01 \\ \hline
+    41	&     8,539E-01	&   1,126E-01 \\ \hline
+    42	&     8,488E-01	&   1,256E-01 \\ \hline
+    43	&     8,432E-01	&   1,401E-01 \\ \hline
+    44	&     8,369E-01	&   1,562E-01 \\ \hline
+    45	&     8,299E-01	&   1,742E-01 \\ \hline
+    46	&     8,221E-01	&   1,941E-01 \\ \hline
+    47	&     8,135E-01	&   2,163E-01 \\ \hline
+    48	&     8,038E-01	&   2,409E-01 \\ \hline
+    49	&     7,931E-01	&   2,682E-01 \\ \hline
+    50	&     7,812E-01	&   2,984E-01 \\ \hline
+    51	&     7,680E-01	&   3,320E-01 \\ \hline
+    52	&     7,534E-01	&   3,691E-01 \\ \hline
+    53	&     7,371E-01	&   4,102E-01 \\ \hline
+    54	&     7,191E-01	&   4,555E-01 \\ \hline
+    55	&     6,992E-01	&   5,054E-01 \\ \hline
+    56	&     6,772E-01	&   5,604E-01 \\ \hline
+    57	&     6,529E-01	&   6,208E-01 \\ \hline
+    58	&     6,261E-01	&   6,871E-01 \\ \hline
+    59	&     5,966E-01	&   7,596E-01 \\ \hline
+    60	&     5,641E-01	&   8,388E-01 \\ \hline
+    61	&     5,285E-01	&   9,249E-01 \\ \hline
+    62	&     4,896E-01	&   1,018E+00 \\ \hline
+    63	&     4,470E-01	&   1,119E+00 \\ \hline
+    64	&     4,006E-01	&   1,228E+00 \\ \hline
+    65	&     3,502E-01	&   1,345E+00 \\ \hline
+    66	&     2,955E-01	&   1,469E+00 \\ \hline
+    67	&     2,365E-01	&   1,601E+00 \\ \hline
+    68	&     1,729E-01	&   1,740E+00 \\ \hline
+    69	&     1,048E-01	&   1,885E+00 \\ \hline
+    70	&     3,198E-02	&   2,036E+00 \\ \hline
+    71	&     -4,541E-02	&   2,190E+00 \\ \hline
+    72	&     -1,273E-01	&   2,346E+00 \\ \hline
+    73	&     -2,135E-01	&   2,502E+00 \\ \hline
+    74	&     -3,037E-01	&   2,656E+00 \\ \hline
+    75	&     -3,975E-01	&   2,804E+00 \\ \hline
+    76	&     -4,944E-01	&   2,944E+00 \\ \hline
+    77	&     -5,940E-01	&   3,071E+00 \\ \hline
+    78	&     -6,954E-01	&   3,182E+00 \\ \hline
+    79	&     -7,980E-01	&   3,273E+00 \\ \hline
+    80	&     -9,009E-01	&   3,341E+00 \\ \hline
+    81	&     -1,003E+00	&   3,383E+00 \\ \hline
+    82	&     -1,105E+00	&   3,396E+00 \\ \hline
+    83	&     -1,203E+00	&   3,379E+00 \\ \hline
+    84	&     -1,299E+00	&   3,331E+00 \\ \hline
+    85	&     -1,392E+00	&   3,253E+00 \\ \hline
+    86	&     -1,480E+00	&   3,148E+00 \\ \hline
+    87	&     -1,563E+00	&   3,017E+00 \\ \hline
+    88	&     -1,640E+00	&   2,864E+00 \\ \hline
+    89	&     -1,713E+00	&   2,694E+00 \\ \hline
+    90	&     -1,779E+00	&   2,513E+00 \\ \hline
+    91	&     -1,840E+00	&   2,323E+00 \\ \hline
+    92	&     -1,895E+00	&   2,131E+00 \\ \hline
+    93	&     -1,945E+00	&   1,940E+00 \\ \hline
+    94	&     -1,990E+00	&   1,754E+00 \\ \hline
+    95	&     -2,030E+00	&   1,575E+00 \\ \hline
+    96	&     -2,066E+00	&   1,407E+00 \\ \hline
+    97	&     -2,097E+00	&   1,249E+00 \\ \hline
+    98	&     -2,125E+00	&   1,105E+00 \\ \hline
+    99	&     -2,149E+00	&   9,723E-01 \\ \hline
+    100	&     -2,170E+00	&   8,527E-01 \\ \hline
+    101	&     -2,188E+00	&   7,453E-01 \\ \hline
+    102	&     -2,204E+00	&   6,495E-01 \\ \hline
+    103	&     -2,218E+00	&   5,646E-01 \\ \hline
+    104	&     -2,230E+00	&   4,896E-01 \\ \hline
+    105	&     -2,240E+00	&   4,238E-01 \\ \hline
+    106	&     -2,249E+00	&   3,662E-01 \\ \hline
+    107	&     -2,257E+00	&   3,159E-01 \\ \hline
+    108	&     -2,264E+00	&   2,722E-01 \\ \hline
+    109	&     -2,269E+00	&   2,343E-01 \\ \hline
+    110	&     -2,274E+00	&   2,015E-01 \\ \hline
+    111	&     -2,279E+00	&   1,731E-01 \\ \hline
+    112	&     -2,282E+00	&   1,486E-01 \\ \hline
+    113	&     -2,285E+00	&   1,275E-01 \\ \hline
+    114	&     -2,288E+00	&   1,094E-01 \\ \hline
+    115	&     -2,290E+00	&   9,377E-02 \\ \hline
+    116	&     -2,292E+00	&   8,035E-02 \\ \hline
+    117	&     -2,294E+00	&   6,883E-02 \\ \hline
+    118	&     -2,295E+00	&   5,895E-02 \\ \hline
+    119	&     -2,296E+00	&   5,047E-02 \\ \hline
+    120	&     -2,298E+00	&   4,320E-02 \\ \hline
+    121	&     -2,298E+00	&   3,697E-02 \\ \hline
+    122	&     -2,299E+00	&   3,164E-02 \\ \hline
+    123	&     -2,300E+00	&   2,707E-02 \\ \hline
+    124	&     -2,300E+00	&   2,316E-02 \\ \hline
+    125	&     -2,301E+00	&   1,981E-02 \\ \hline
+    126	&     -2,301E+00	&   1,694E-02 \\ \hline
+    127	&     -2,302E+00	&   1,449E-02 \\ \hline
+    128	&     -2,302E+00	&   1,239E-02 \\ \hline
+    129	&     -2,302E+00	&   1,060E-02 \\ \hline
+    130	&     -2,302E+00	&   9,064E-03 \\ \hline
+    131	&     -2,303E+00	&   7,751E-03 \\ \hline
+    132	&     -2,303E+00	&   6,628E-03 \\ \hline
+    133	&     -2,303E+00	&   5,667E-03 \\ \hline
+    134	&     -2,303E+00	&   4,846E-03 \\ \hline
+    135	&     -2,303E+00	&   4,143E-03 \\ \hline
+    136	&     -2,303E+00	&   3,542E-03 \\ \hline
+    137	&     -2,303E+00	&   3,029E-03 \\ \hline
+    138	&     -2,303E+00	&   2,590E-03 \\ \hline
+    139	&     -2,303E+00	&   2,214E-03 \\ \hline
+    140	&     -2,303E+00	&   1,893E-03 \\ \hline
+    141	&     -2,303E+00	&   1,618E-03 \\ \hline
+    142	&     -2,303E+00	&   1,384E-03 \\ \hline
+    143	&     -2,304E+00	&   1,183E-03 \\ \hline
+    144	&     -2,304E+00	&   1,011E-03 \\ \hline
+    145	&     -2,304E+00	&   8,648E-04 \\ \hline
+    146	&     -2,304E+00	&   7,393E-04 \\ \hline
+    147	&     -2,304E+00	&   6,321E-04 \\ \hline
+    148	&     -2,304E+00	&   5,404E-04 \\ \hline
+    149	&     -2,304E+00	&   4,620E-04 \\ \hline
+    150	&     -2,304E+00	&   3,950E-04 \\ \hline
+    151	&     -2,304E+00	&   3,377E-04 \\ \hline
+    152	&     -2,304E+00	&   2,887E-04 \\ \hline
+    153	&     -2,304E+00	&   2,468E-04 \\ \hline
+    154	&     -2,304E+00	&   2,110E-04 \\ \hline
+    155	&     -2,304E+00	&   1,804E-04 \\ \hline
+    156	&     -2,304E+00	&   1,542E-04 \\ \hline
+    157	&     -2,304E+00	&   1,319E-04 \\ \hline
+    158	&     -2,304E+00	&   1,127E-04 \\ \hline
+    159	&     -2,304E+00	&   9,638E-05 \\ \hline
+    160	&     -2,304E+00	&   8,240E-05 \\ \hline
+    161	&     -2,304E+00	&   7,045E-05 \\ \hline
+    162	&     -2,304E+00	&   6,023E-05 \\ \hline
+    163	&     -2,304E+00	&   5,149E-05 \\ \hline
+    164	&     -2,304E+00	&   4,402E-05 \\ \hline
+    165	&     -2,304E+00	&   3,764E-05 \\ \hline
+    166	&     -2,304E+00	&   3,218E-05 \\ \hline
+    167	&     -2,304E+00	&   2,751E-05 \\ \hline
+    168	&     -2,304E+00	&   2,352E-05 \\ \hline
+    169	&     -2,304E+00	&   2,011E-05 \\ \hline
+    170	&     -2,304E+00	&   1,719E-05 \\ \hline
+    171	&     -2,304E+00	&   1,470E-05 \\ \hline
+    172	&     -2,304E+00	&   1,256E-05 \\ \hline
+    173	&     -2,304E+00	&   1,074E-05 \\ \hline
+    174	&     -2,304E+00	&   9,183E-06 \\ \hline
+    175	&     -2,304E+00	&   7,851E-06 \\ \hline
+    176	&     -2,304E+00	&   6,712E-06 \\ \hline
+    177	&     -2,304E+00	&   5,739E-06 \\ \hline
+    178	&     -2,304E+00	&   4,906E-06 \\ \hline
+    179	&     -2,304E+00	&   4,194E-06 \\ \hline
+    180	&     -2,304E+00	&   3,586E-06 \\ \hline
+    181	&     -2,304E+00	&   3,066E-06 \\ \hline
+    182	&     -2,304E+00	&   2,621E-06 \\ \hline
+    183	&     -2,304E+00	&   2,241E-06 \\ \hline
+    184	&     -2,304E+00	&   1,916E-06 \\ \hline
+    185	&     -2,304E+00	&   1,638E-06 \\ \hline
+    186	&     -2,304E+00	&   1,400E-06 \\ \hline
+    187	&     -2,304E+00	&   1,197E-06 \\ \hline
+    188	&     -2,304E+00	&   1,023E-06 \\ \hline
+    189	&     -2,304E+00	&   8,750E-07 \\ \hline
+    190	&     -2,304E+00	&   7,480E-07 \\ \hline
+    191	&     -2,304E+00	&   6,395E-07 \\ \hline
+    192	&     -2,304E+00	&   5,468E-07 \\ \hline
+    193	&     -2,304E+00	&   4,674E-07 \\ \hline
+    194	&     -2,304E+00	&   3,996E-07 \\ \hline
+    195	&     -2,304E+00	&   3,417E-07 \\ \hline
+    196	&     -2,304E+00	&   2,921E-07 \\ \hline
+    197	&     -2,304E+00	&   2,497E-07 \\ \hline
+    198	&     -2,304E+00	&   2,135E-07 \\ \hline
+    199	&     -2,304E+00	&   1,825E-07 \\ \hline
+    200	&     -2,304E+00	&   1,560E-07 \\ \hline
+    201	&     -2,304E+00	&   1,334E-07 \\ \hline
+    202	&     -2,304E+00	&   1,141E-07 \\ \hline
+    203	&     -2,304E+00	&   9,751E-08 \\ \hline
+    204	&     -2,304E+00	&   8,336E-08 \\ \hline
+    205	&     -2,304E+00	&   7,127E-08 \\ \hline
+    206	&     -2,304E+00	&   6,093E-08 \\ \hline
+    207	&     -2,304E+00	&   5,209E-08 \\ \hline
+    208	&     -2,304E+00	&   4,454E-08 \\ \hline
+    209	&     -2,304E+00	&   3,808E-08 \\ \hline
+    210	&     -2,304E+00	&   3,255E-08 \\ \hline
+    211	&     -2,304E+00	&   2,783E-08 \\ \hline
+    212	&     -2,304E+00	&   2,379E-08 \\ \hline
+    213	&     -2,304E+00	&   2,034E-08 \\ \hline
+    214	&     -2,304E+00	&   1,739E-08 \\ \hline
+    215	&     -2,304E+00	&   1,487E-08 \\ \hline
+    216	&     -2,304E+00	&   1,271E-08 \\ \hline
+    217	&     -2,304E+00	&   1,087E-08 \\ \hline
+    218	&     -2,304E+00	&   9,290E-09 \\ \hline
+    219	&     -2,304E+00	&   7,943E-09 \\ \hline
+    220	&     -2,304E+00	&   6,791E-09 \\ \hline
+    221	&     -2,304E+00	&   5,805E-09 \\ \hline
+    222	&     -2,304E+00	&   4,963E-09 \\ \hline
+    223	&     -2,304E+00	&   4,243E-09 \\ \hline
+    224	&     -2,304E+00	&   3,628E-09 \\ \hline
+    225	&     -2,304E+00	&   3,102E-09 \\ \hline
+    226	&     -2,304E+00	&   2,652E-09 \\ \hline
+    227	&     -2,304E+00	&   2,267E-09 \\ \hline
+    228	&     -2,304E+00	&   1,938E-09 \\ \hline
+    229	&     -2,304E+00	&   1,657E-09 \\ \hline
+    230	&     -2,304E+00	&   1,417E-09 \\ \hline
+    231	&     -2,304E+00	&   1,211E-09 \\ \hline
+    232	&     -2,304E+00	&   1,035E-09 \\ \hline
+    233	&     -2,304E+00	&   8,852E-10 \\ \hline
+    234	&     -2,304E+00	&   7,568E-10 \\ \hline
+    235	&     -2,304E+00	&   6,470E-10 \\ \hline
+    236	&     -2,304E+00	&   5,532E-10 \\ \hline
+    237	&     -2,304E+00	&   4,729E-10 \\ \hline
+    238	&     -2,304E+00	&   4,043E-10 \\ \hline
+    239	&     -2,304E+00	&   3,457E-10 \\ \hline
+    240	&     -2,304E+00	&   2,955E-10 \\ \hline
+    241	&     -2,304E+00	&   2,527E-10 \\ \hline
+    242	&     -2,304E+00	&   2,160E-10 \\ \hline
+    243	&     -2,304E+00	&   1,847E-10 \\ \hline
+    244	&     -2,304E+00	&   1,579E-10 \\ \hline
+    245	&     -2,304E+00	&   1,350E-10 \\ \hline
+    246	&     -2,304E+00	&   1,154E-10 \\ \hline
+    247	&     -2,304E+00	&   9,866E-11 \\ \hline
+    248	&     -2,304E+00	&   8,436E-11 \\ \hline
+    249	&     -2,304E+00	&   7,216E-11 \\ \hline
+    250	&     -2,304E+00	&   6,164E-11 \\ \hline
+    251	&     -2,304E+00	&   5,274E-11 \\ \hline
+    252	&     -2,304E+00	&   4,510E-11 \\ \hline
+    253	&     -2,304E+00	&   3,858E-11 \\ \hline
+    254	&     -2,304E+00	&   3,296E-11 \\ \hline
+    255	&     -2,304E+00	&   2,820E-11 \\ \hline
+    256	&     -2,304E+00	&   2,413E-11 \\ \hline
+    257	&     -2,304E+00	&   2,062E-11 \\ \hline
+    258	&     -2,304E+00	&   1,761E-11 \\ \hline
+    259	&     -2,304E+00	&   1,509E-11 \\ \hline
+    260	&     -2,304E+00	&   1,291E-11 \\ \hline
+    261	&     -2,304E+00	&   1,102E-11 \\ \hline
+    262	&     -2,304E+00	&   9,408E-12 \\ \hline
+\end{longtable}
+\label{table:samples1}
+\end{center}
+\FloatBarrier
+
+\subsection{Metoda Newtona, pierwsze miejsce zerowe}
+\begin{table}[!htbp]
+\centering
+\begin{longtable}{|c|c|c|} 
+    \hline
+    \textbf{Iteracja} & \textbf{x} & \textbf{f(x)} \\
+    \hline\hline
+    1 & -5,000E+00  &	-1,303E+02   \\ \hline
+    2 & -4,104E+00  &	-4,516E+01   \\ \hline
+    3 & -3,319E+00  &	-1,459E+01   \\ \hline
+    4 & -2,728E+00  &	-4,013E+00   \\ \hline
+    5 & -2,401E+00  &	-7,328E-01   \\ \hline
+    6 & -2,310E+00  &	-4,451E-02   \\ \hline
+    7 & -2,304E+00  &	-1,990E-04   \\ \hline
+    8 & -2,304E+00  &	-4,033E-09   \\ \hline
+    9 & -2,304E+00  &	1,377E-14   \\ \hline
+\end{longtable}
+\label{table:samples2}
+\end{table}
+\FloatBarrier
+
+\clearpage
+\subsection{Metoda \textit{regula falsi}, drugie miejsce zerowe}
+\begin{table}[!htbp]
+\centering
+\begin{longtable}{|c|c|c|} 
+    \hline
+    \textbf{Iteracja} & \textbf{x} & \textbf{f(x)} \\
+    \hline\hline
+    1 & -2,303E+00  &	4,850E-03   \\ \hline
+    2 & -2,301E+00  &	2,036E-02   \\ \hline
+    3 & -2,291E+00  &	8,488E-02   \\ \hline
+    4 & -2,253E+00  &	3,440E-01   \\ \hline
+    5 & -2,098E+00  &	1,244E+00   \\ \hline
+    6 & -1,564E+00  &	3,015E+00   \\ \hline
+    7 & -3,982E-01  &	2,805E+00   \\ \hline
+    8 & 5,838E-01   &	7,907E-01   \\ \hline
+    9 & 8,527E-01   &	1,156E-01   \\ \hline
+    10 & 8,919E-01   &	1,454E-02   \\ \hline
+    11 & 8,968E-01   &	1,790E-03   \\ \hline
+    12 & 8,974E-01   &	2,198E-04   \\ \hline
+    13 & 8,975E-01   &	2,699E-05   \\ \hline
+    14 & 8,975E-01   &	3,314E-06   \\ \hline
+    15 & 8,975E-01   &	4,069E-07   \\ \hline
+    16 & 8,975E-01   &	4,995E-08   \\ \hline
+    17 & 8,975E-01   &	6,133E-09   \\ \hline
+    18 & 8,975E-01   &	7,530E-10   \\ \hline
+    19 & 8,975E-01   &	9,245E-11   \\ \hline
+    20 & 8,975E-01   &	1,135E-11   \\ \hline
+    21 & 8,975E-01   &	1,393E-12   \\ \hline
+\end{longtable}
+\label{table:samples3}
+\end{table}
+\FloatBarrier
+
+\subsection{Metoda Newtona, drugie miejsce zerowe}
+\begin{table}[!htbp]
+\centering
+\begin{longtable}{|c|c|c|} 
+    \hline
+    \textbf{Iteracja} & \textbf{x} & \textbf{f(x)} \\
+    \hline\hline
+    1 & 1,000E+01   &	-2,690E+01   \\ \hline
+    2 & 1,033E+00   &	-3,554E-01   \\ \hline
+    3 & 8,988E-01   &	-3,364E-03   \\ \hline
+    4 & 8,975E-01   &	-3,427E-07   \\ \hline
+    5 & 8,975E-01   &	-3,997E-15   \\ \hline
+\end{longtable}
+\label{table:samples4}
+\end{table}
+\FloatBarrier
+
+\end{document}

@@ -1,0 +1,292 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, margin=2.00cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{minted}
+\usepackage{parskip}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage[justification=centering]{caption}
+
+\graphicspath{ {images/} }
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\thesection}{\arabic{section}.}
+\renewcommand{\thesubsection}{\thesection\arabic{subsection}.}
+\setminted{breaklines}
+\hyphenpenalty=10000
+\emergencystretch=\maxdimen
+\captionsetup[table]{name=Tabela}
+\captionsetup[figure]{name=Wykres}
+
+\title{Sprawozdanie z wykonania zadania 2.14}
+\author{Dawid Sygocki}
+\date{\today}
+
+\begin{document}
+\makeatletter
+{\huge \@title} \\
+\textsl{\large Autor: \@author, nr indeksu: 304108, grupa: wtorek 14:15}
+\makeatother
+
+\section{Wprowadzenie}
+Zadanie projektowe nr 2 skupiało się na aproksymacji średniokwadratowej dyskretnej na podstawie próbek przedstawionych w tabeli \ref{table:samples}. Funkcjami aproksymującymi były wielomiany w bazie naturalnej.
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{|c|c|} 
+    \hline
+    \textbf{x} & \textbf{y} \\
+    \hline\hline
+    -5  & -32,9591  \\ \hline
+    -4  & -20,7011  \\ \hline
+    -3  & -12,6986  \\ \hline
+    -2  & -5,1508   \\ \hline
+    -1  & -1,6893   \\ \hline
+    0   & 0,1266    \\ \hline
+    1   & 0,0743    \\ \hline
+    2   & -0,8709   \\ \hline
+    3   & -1,7371   \\ \hline
+    4   & -3,9952   \\ \hline
+    5   & -4,8987   \\ \hline
+\end{tabular}
+\caption{Zestaw próbek, na podstawie których dokonywana była aproksymacja.}
+\label{table:samples}
+\end{table}
+\FloatBarrier
+
+Rozwiązanie liniowego zadania najmniejszych kwadratów (stanowiącego centrum problemu) było, zgodnie z poleceniem, realizowane na dwa sposoby: z użyciem układu równań normalnych (\(A^{T}Aa=A^{T}y\)) oraz z użyciem układu równań liniowych z produktami rozkładu QR (\(\bar{R}a=(\bar{Q}^{T}\bar{Q})^{-1}\bar{Q}^{T}y\)), gdzie \(A\) jest macierzą złożoną z kolumnowych wektorów \(x\) w kolejnych potęgach (\(x^{0}\), \(x^{1}\), \(x^{2}\), ...), \(\bar{Q}\) i \(\bar{R}\) są produktami jej rozkładu, a a jest wektorem współczynników wielomianu.
+
+Zgodnie z pomiarami błędu aproksymacji, najlepsze dopasowanie miał wielomian o stopniu 10 (rys. \ref{fig:qr_10}), czyli najwyższym sensownym.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{qr_10}
+\centering
+\caption{Przybliżenie wielomianem stopnia 10 na tle próbek}
+\label{fig:qr_10}
+\end{figure}
+\FloatBarrier
+
+Subiektywnie oceniając jednak, na tle próbek lepiej wyglądał wielomian stopnia 5 (rys. \ref{fig:qr_5}), w którego przebiegu mniej było niepotrzebnych zakrzywień.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{qr_5}
+\centering
+\caption{Przybliżenie wielomianem stopnia 10 na tle próbek}
+\label{fig:qr_5}
+\end{figure}
+\FloatBarrier
+
+\clearpage
+\section{Rozwiązanie z użyciem układu równań normalnych}
+
+\subsection{Opis algorytmu i implementacji}
+Używany w tej sekcji układ równań normalnych:
+\[A^{T}Aa=A^{T}y\]
+jest układem równań liniowych wynikającym z minimalizacji sumy kwadratów (LZNK). Wyprowadzenie takiego układu było możliwe, ponieważ dodatnia określoność macierzy \(A^{T}A\) sprawia, że minimalizowana funkcja jest wypukła w swojej dziedzinie (posiada jednoznaczne minimum). Warto pamiętać, że macierz \(A^{T}A\) jest dodatnio określona, jeśli macierz \(A\) jest pełnego rzędu (rząd równy liczbie kolumn), co dla wielomianów stopnia 0--10 gwarantowane jest przez liniową niezależność funkcji bazowych.
+
+\subsection{Wyniki oraz wnioski}
+Wynikowy wykres funkcji aproksymujących podzielony jest na dwie partie: wstępną (stopnie 0--5, wykres \ref{fig:normal_0-5}) i końcową (stopnie 6--10, wykres \ref{fig:normal_6-10})
+Przybliżenie zaczyna dawać subiektywnie dobre wyniki począwszy od wielomianu stopnia 3. Wyniki krańcowe (zarówno początkowe, jak i końcowe) są odstające: dla wielomianów poniżej stopnia 3 ze względu na zbyt niedokładne dopasowanie, dla wielomianów stopnia 9 i 10 przez próbę nadmiernego dopasowania do próbek obarczonych szumem pomiarowym.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{normal_0-5}
+\centering
+\caption{Przybliżenie wielomianami stopnia 0--5 na tle próbek przy rozwiązywaniu LZNK za pomocą układu równań normalnych}
+\label{fig:normal_0-5}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{normal_6-10}
+\centering
+\caption{Przybliżenie wielomianami stopnia 6-10 na tle próbek przy rozwiązywaniu LZNK za pomocą układu równań normalnych}
+\label{fig:normal_6-10}
+\end{figure}
+\FloatBarrier
+
+\clearpage
+\section{Rozwiązanie z użyciem rozkładu QR}
+
+\subsection{Opis algorytmu i implementacji}
+Alternatywnym (równoważnym) podejściem jest wykorzystanie faktoryzacji QR, zgodnie ze wzorem:
+\[\bar{R}a=(\bar{Q}^{T}\bar{Q})^{-1}\bar{Q}^{T}y\]
+Metoda ta jest zalecana przy złym uwarunkowaniu macierzy \(A^{T}A\) z układu równań normalnych.
+
+Oznaczenia nad literami \(\bar{Q}\) i \(\bar{R}\) oznaczają tu produkty rozkładu wąskiego nieznormalizowanego. Wykorzystałem właśnie tę wersję rozkładu QR, ponieważ była najprostsza w implementacji. Użyłem algorytmu ortogonalizacji Grama-Schmidta, a konkretnie jego zmodyfikowanej wersji przedstawionej w podręczniku do przedmiotu. Modyfikacja ma na celu poprawę właściwości numerycznych algorytmu, a polega na zmianie porządku jego działania -- zamiast przetwarzania kolejnej kolumny macierzy A dopiero po zakończeniu wszystkich działań na poprzedniej, dokonywana jest ortogonalizacja wszystkich kolumn do przodu wedle bieżącej.
+
+\subsection{Wyniki oraz wnioski}
+Jak poprzednio, wykres funkcji aproksymujących przedstawiony jest w dwóch częściach (wykresy \ref{fig:qr_0-5}, \ref{fig:qr_6-10}).
+
+Różnice w wykresach między dwoma metodami rozwiązywania LZNK są niezauważalne, stąd w sekcji \ref{section:summary} przedstawione jest szczegółowe porównanie błędów przybliżenia i rozwiązań.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{qr_0-5}
+\centering
+\caption{Przybliżenie wielomianami stopnia 0-5 na tle próbek przy rozwiązywaniu LZNK za pomocą rozkładu QR}
+\label{fig:qr_0-5}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{qr_6-10}
+\centering
+\caption{Przybliżenie wielomianami stopnia 6-10 na tle próbek przy rozwiązywaniu LZNK za pomocą rozkładu QR}
+\label{fig:qr_6-10}
+\end{figure}
+\FloatBarrier
+
+
+\clearpage
+\section{Porównanie metod rozwiązywania LZNK}
+\label{section:summary}
+Do liczenia wszystkich błędów wykorzystana została norma druga wektorowa.
+
+Po zapoznaniu się z wykresem \ref{fig:approxErr} ciężko o zdziwienie, że różnice między wykresami funkcji aproksymujących są niezauważalne. Pojawia się wprawdzie pewna rozbieżność przy wykorzystaniu wielomianów o stopniu powyżej maksymalnego sensownego, ale nie została ona przedstawiona na poprzednich grafikach, a jest omówiona później w ramach ciekawostki.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{approxErr}
+\centering
+\caption{Porównanie błędu przybliżenia dla obu metod}
+\label{fig:approxErr}
+\end{figure}
+\FloatBarrier
+
+Ze względu na znajdującą się w podręczniku radę użycia rozkładu QR dla uzyskania lepszych wyników dla źle uwarunkowanego układu równań, ważna jest przedstawiona na wykresie \ref{fig:solverErr} norma residuum. Dla układu równań normalnych jest to norma z różnicy \(A^{T}Ax - A^{T}b\), dla rozkładu QR natomiast norma z różnicy \(\bar{R}a - (\bar{Q}^{T}\bar{Q})^{-1}\bar{Q}^{T}y\).
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{solverErr}
+\centering
+\caption{Porównanie błędu rozwiązania dla obu metod}
+\label{fig:solverErr}
+\end{figure}
+\FloatBarrier
+
+Na podstawie przedstawionego porównania można stwierdzić, że porada dotycząca stosowania rozkładu QR jest słuszna - dla sensownych stopni wielomianu błąd jest mniejszy nawet o 10 rzędów wielkości (co nie wpływa jednak znacznie na błąd przybliżenia).
+
+Na zakończenie zamieszczam wykresy wielomianów aproksymujących o stopniach ponad 10. W przypadku układu równań normalnych (rysunek \ref{fig:normal_11-13}) widać jedynie postępujące nadmierne dopasowanie do zaszumionych danych. Subiektywnie przebieg funkcji nie ulega poprawie.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{normal_11-13}
+\centering
+\caption{Przybliżenie wielomianami stopnia 11--13 na tle próbek przy rozwiązywaniu LZNK za pomocą układu równań normalnych}
+\label{fig:normal_11-13}
+\end{figure}
+\FloatBarrier
+
+Dla rozkładu QR (rysunek \ref{fig:qr_11-13}) przebieg wykresu ulega znacznemu pogorszeniu. Z definicji rozkład ten przeznaczony jest dla macierzy o liczbie wierszy większej lub równej liczbie kolumn. Dodatkowo zastosowany algorytm Grama-Schmidta przeznaczony jest jedynie dla macierzy o pełnym rzędzie. Dla stopnia równego lub większego od liczby próbek założenia te przestają być spełnione (w szczególności macierz przestaje być liniowo niezależna).
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=15cm]{qr_11-13}
+\centering
+\caption{Przybliżenie wielomianami stopnia 11--13 na tle próbek przy rozwiązywaniu LZNK za pomocą rozkładu QR}
+\label{fig:qr_11-13}
+\end{figure}
+\FloatBarrier
+
+\clearpage
+\section{Wydruk wykorzystanego kodu}
+
+\subsection{projekt2.m}
+Główny skrypt zajmujący się wywoływaniem pozostałych funkcji, rysowaniem wykresu i zapisem danych.
+\begin{minted}{matlab}
+function [] = projekt2(min_degree, max_degree)
+    timeStr = char(datetime('now', 'Format', 'yyyyMMdd-HHmmss'));
+
+    [x, y] = getdata();
+    solvers = {@solvellsnormal, @solvellsqr};
+    degrees = min_degree:max_degree;
+    xForApprox = linspace(-5, 5, 110)';
+    for i = 1:length(solvers)
+        figure("Name", functions(solvers{i}).function, "DefaultLineLineWidth", 2);
+        % rysowanie próbek
+        plot(x, y, "Marker", "o", "LineStyle", "none", "MarkerSize", 10);
+        hold on;
+        for j = 1:length(degrees)
+            % przygotowywanie macierzy A i rozwiązywanie LZNK
+            A = x .^ (0:degrees(j));
+            [a, approxErr, solverErr, solverCond] = approximatepolynomial(A, y, solvers{i});
+
+            % rysowanie przebiegu wielomianu z 10x dokładniejszym próbkowaniem
+            biggerA = xForApprox .^ (0:degrees(j));
+            yApprox = biggerA * a;
+            plot(xForApprox, yApprox, "LineStyle", "-");
+
+            % zapis danych błędu do arkusza
+            row = (i - 1) * length(degrees) + j + 1;
+            writedata(solvers{i}, degrees(j), timeStr, row, a, approxErr, solverErr, solverCond);
+        end
+
+        % legenda do wykresu
+        textDegrees = cellfun(@(x) ['Stopień ', num2str(x)], num2cell(degrees), "UniformOutput", false);
+        textDegrees = cat(1, {'Próbki'}, textDegrees{:});
+        legend(textDegrees);
+        hold off;
+    end
+end
+\end{minted}
+
+\subsection{approximatepolynomial.m}
+Opakowanie na funkcje rozwiązujące LZNK.
+\begin{minted}{matlab}
+function [a, approxErr, solverErr, solverCond] = approximatepolynomial(A, ySamples, solver)
+    [a, solverErr, solverCond] = solver(A, ySamples);
+    approxErr = residuum(A, a, ySamples);
+end
+\end{minted}
+
+\subsection{solvellsnormal.m}
+Funkcja przygotowująca i rozwiązująca układ równań normalnych.
+\begin{minted}{matlab}
+function [x, rnorm, rcnd] = solvellsnormal(A, b)
+    x = linsolve(A' * A, A' * b);
+    rnorm = residuum(A' * A, x, A' * b);
+    rcnd = rcond(A' * A);
+end
+\end{minted}
+
+\subsection{solvellsqr.m}
+Funkcja dokonująca faktoryzacji QR i rozwiązująca układ równań liniowych powstały z jej użyciem.
+\begin{minted}{matlab}
+function [x, rnorm, rcnd] = solvellsqr(A, b)
+    [Q_, R_, d] = modifiedgramschmidt(A);
+    % zgodnie z poradą z podręcznika: Q_' * Q_ == diag(d)
+    x = linsolve(R_, inv(diag(d)) * Q_' * b);
+    rnorm = residuum(R_, x, inv(diag(d)) * Q_' * b);
+    rcnd = rcond(R_);
+end
+\end{minted}
+
+\subsection{modifiedgramschmidt.m}
+Zmodyfikowany algorytm Grama-Schmidta -- na podstawie kodu z podręcznika do przedmiotu.
+\begin{minted}{matlab}
+function [Q_, R_, d] = modifiedgramschmidt(A)
+    [m, n] = size(A);
+    Q_ = zeros(m, n);
+    R_ = eye(n);
+    d = zeros(n, 1);
+
+    for i = 1:n
+        Q_(:, i) = A(:, i);
+        d(i) = Q_(:, i)' * Q_(:, i);
+        for j = (i + 1):n
+            R_(i, j) = Q_(:, i)' * A(:, j) / d(i);
+            A(:, j) = A(:, j) - R_(i, j) * Q_(:, i);
+        end
+    end
+end
+\end{minted}
+
+\end{document}
