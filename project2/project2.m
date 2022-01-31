@@ -1,4 +1,4 @@
-function [] = projekt2(min_degree, max_degree)
+function [] = project2(min_degree, max_degree)
     timeStr = char(datetime('now', 'Format', 'yyyyMMdd-HHmmss'));
 
     [x, y] = getdata();

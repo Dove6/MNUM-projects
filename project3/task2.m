@@ -1,4 +1,4 @@
-function roots = zadanie2(valueTolerance)
+function roots = task2(valueTolerance)
     assert(valueTolerance > 0);
 
     a = [-1, -7, 7, 3, 9];

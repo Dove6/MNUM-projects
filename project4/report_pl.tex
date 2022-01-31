@@ -475,22 +475,22 @@ function [range] = getrange()
 end
 \end{minted}
 
-\subsection{projekt4.m}
+\subsection{project4.m}
 Zestaw funkcji do rysowania i opisu testowanych metod.
 \begin{minted}{matlab}
-function [] = projekt4(taskNo)
+function [] = project4(taskNo)
     if taskNo == 1
-        zadanie1();
+        task1();
     elseif taskNo == 2
-        zadanie2();
+        task2();
     elseif taskNo == 3
-        zadanie3();
+        task3();
     else
         error("TaskNo must be one of: 1, 2, 3");
     end
 end
 
-function [] = zadanie1()
+function [] = task1()
     % Absolute maximum:
     % * 0.01327215
     % * 0.049965
@@ -503,7 +503,7 @@ function [] = zadanie1()
     conststepwrapper(1, "d", 0.1, 0.5, ["northeast", "southeast"]);
 end
 
-function [] = zadanie2()
+function [] = task2()
     % Absolute maximum:
     % * 0.006790043245
     % * 0.0255
@@ -516,7 +516,7 @@ function [] = zadanie2()
     conststepwrapper(2, "d", 0.001, 0.05, ["northeast", "southeast"]);
 end
 
-function [] = zadanie3()
+function [] = task3()
     % OK parameters:
     % * 0.01, 10e-15, 10e-5, 10e-5
     % * 0.1, 10e-15, 10e-10, 10e-7

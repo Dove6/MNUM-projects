@@ -1,4 +1,4 @@
-function [] = projekt1()
+function [] = project1()
     %dataProviders = {@getdata1, @getdata2};
     %solvers = {@gaussiansolve, @jacobisolve, @mldivide, @linsolve};
     %systemSizes = 2 .^ (0:7) .* 10;
